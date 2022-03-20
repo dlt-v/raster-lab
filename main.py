@@ -3,7 +3,7 @@ from tkinter import filedialog
 from PIL import Image, ImageTk
 
 root = tk.Tk()
-root.geometry("300x300")
+root.geometry("200x50")
 root.title("RasterLab")
 icon = tk.PhotoImage(file='icon.png')
 root.iconphoto(False, icon)
@@ -12,6 +12,8 @@ root.iconphoto(False, icon)
 def import_image():
     extensions = [('formats', ['.jpg', '.png', 'bmp'])]
     file_path = filedialog.askopenfilename(filetypes=extensions)
+    if not file_path:
+        return
     new_img = ImageTk.PhotoImage(Image.open(file_path))
     # label = tk.Label(root, text=file_path)
     # label.pack()
@@ -24,21 +26,16 @@ def import_image():
     new_window.geometry(geometry)
 
     image = tk.Label(new_window, image=new_img)
-    image.image = new_img  # it has to be a reference, otherwise the image doesn't load!
+    # it has to be a reference, otherwise the image doesn't load!
+    image.image = new_img  # type: ignore
     image.pack()
 
 
 import_button = tk.Button(root,
                           text="import image",
-                          pady=50,
-                          padx=50, command=import_image
+                          pady=10,
+                          padx=20, command=import_image
                           )
 import_button.pack()
-
-# img = tk.PhotoImage(file='icon.png')
-# tk.Label(
-#     root,
-#     image=img
-# ).pack()
 
 root.mainloop()
