@@ -63,6 +63,29 @@ def compose_histogram():
 
         case 'RGB':
             print("This image is RGB.")
+            r_values = {}
+            g_values = {}
+            b_values = {}
+            i = 0
+            while i < 20:
+                red_v = str(pixel_list[i][0])
+                blu_v = str(pixel_list[i][1])
+                grn_v = str(pixel_list[i][2])
+                if red_v in r_values.keys():
+                    r_values[red_v] += 1
+                else:
+                    r_values[red_v] = 1
+
+                if blu_v in g_values.keys():
+                    g_values[blu_v] += 1
+                else:
+                    g_values[blu_v] = 1
+
+                if grn_v in b_values.keys():
+                    b_values[grn_v] += 1
+                else:
+                    b_values[grn_v] = 1
+                i += 1
 
 
 import_button = tk.Button(root,
