@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import filedialog
-from typing import Any
 from PIL import Image, ImageTk
 
 root = tk.Tk()
@@ -14,7 +13,7 @@ focused_file: str = ""
 
 
 def import_image():
-    extensions = [('formats', ['.jpg', '.png', 'bmp'])]
+    extensions = [('formats', ['.jpg', '.png', '.bmp', '.jpeg'])]
     file_path = filedialog.askopenfilename(filetypes=extensions)
     if not file_path:
         return
@@ -43,17 +42,43 @@ def import_image():
     image.pack()
 
 
+def compose_histogram():
+    new_image = Image.open(focused_file)
+    pixel_list = list(new_image.getdata())
+    match (new_image.mode):
+        # L for greyscale images, RGB for color images (duh)
+        case 'L':
+            print("This image is greyscale.")
+            color_values = {}
+            i = 0
+            while i < len(pixel_list):
+                # if the value is already in the dictionary
+                if f"{pixel_list[i]}" in color_values.keys():
+                    color_values[f"{pixel_list[i]}"] += 1
+                # if the value is not yet in dictionary
+                else:
+                    color_values[f"{pixel_list[i]}"] = 1
+                i += 1
+            print(color_values.keys())
+
+        case 'RGB':
+            print("This image is RGB.")
+
+
 import_button = tk.Button(root,
                           text="import image",
-                          pady=10,
-                          padx=20, command=import_image
+                          pady=5,
+                          padx=10, command=import_image,
+                          font=("consolas", 12)
                           )
 import_button.grid(column=1, row=1, padx=5, pady=5)
 
 histogram_button = tk.Button(root,
                              text="make a histogram",
-                             pady=10,
-                             padx=20, command=import_image
+                             pady=5,
+                             padx=10, command=compose_histogram,
+                             font=("consolas", 12)
+
                              )
 histogram_button.grid(column=2, row=1, padx=5, pady=5)
 
