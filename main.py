@@ -1,60 +1,54 @@
-import tkinter as tk
-from tkinter import ttk
-from turtle import width
-
-from pip import main
-
-# Main program configuration
-root = tk.Tk()
-root.title("RasterLab")
-root.geometry('600x300')
-root.resizable(tk.FALSE, tk.FALSE)
-icon = tk.PhotoImage(file='icon.png')
-root.iconphoto(False, icon)
+from re import MULTILINE
+from statistics import multimode
+from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 
 
-mainframe = ttk.Frame(root, padding="12 12 12 12")
-mainframe.grid(column=0, row=0, sticky=(
-    tk.N, tk.W, tk.E, tk.S))  # type: ignore
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
+class RasterLab(App):
+    def build(self):
+        self.window = GridLayout()
+        self.icon = "icon.png"
+        self.window.cols = 1
+        self.window.size_hint = (0.6, 0.7)
+        self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
+        # add widgets to window
+
+        self.window.add_widget(Image(source="logo.png"))
+        self.greeting = Label(
+            text="greeting",
+            font_size=20,
+            color='#00FFCE'
+        )
+        self.window.add_widget(self.greeting)
+
+        self.user = TextInput(
+            multiline=False,
+            padding_y=(20, 20),
+            padding_x=(40, 40),
+            size_hint=(1, 0.5),
+            font_size=20
+        )
+        self.window.add_widget(self.user)
+
+        self.button = Button(
+            text="GREET",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#00FFCE',
+            # background_normal=""
+        )
+        self.button.bind(on_press=self.callback)  # type: ignore
+        self.window.add_widget(self.button)
+
+        return self.window
+
+    def callback(self, event):
+        self.greeting.text = "Hello " + self.user.text + "!"
 
 
-# Import image button
-
-
-# Canvas
-# canvas = tk.Canvas(root, width=600, height=270)
-# canvas.pack()
-
-
-def calculate(*args):
-    try:
-        value = float(feet.get())
-        meters.set(str(int(0.3048 * value * 10000.0 + 0.5)/10000.0))
-    except ValueError:
-        pass
-
-
-feet = tk.StringVar()
-feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-feet_entry.grid(column=2, row=1, sticky=(tk.W, tk.E))  # type: ignore
-
-meters = tk.StringVar()
-ttk.Label(mainframe, textvariable=meters).grid(
-    column=2, row=2, sticky=(tk.W, tk.E))  # type: ignore
-
-ttk.Button(mainframe, text="Calculate", command=calculate).grid(
-    column=3, row=3, sticky=tk.W)
-
-ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=tk.W)
-ttk.Label(mainframe, text="is equivalent to").grid(
-    column=1, row=2, sticky=tk.E)
-ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=tk.W)
-
-for child in mainframe.winfo_children():
-    child.grid_configure(padx=5, pady=5)
-feet_entry.focus()
-root.bind("<Return>", calculate)
-
-root.mainloop()
+if __name__ == "__main__":
+    RasterLab().run()
