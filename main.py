@@ -19,11 +19,12 @@ def import_image():
     new_window = tk.Toplevel(root)
     new_window.iconphoto(False, icon)
     new_window.title(file_path)
-
-    new_window.geometry("300x300")
+    geo_img = Image.open(file_path)
+    geometry = f"{geo_img.height}x{geo_img.width}"
+    new_window.geometry(geometry)
 
     image = tk.Label(new_window, image=new_img)
-    image.image = new_img
+    image.image = new_img  # it has to be a reference, otherwise the image doesn't load!
     image.pack()
 
 
