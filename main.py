@@ -1,13 +1,13 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 
 from pip import main
 
-root = Tk()
+root = tk.Tk()
 root.title("RasterLab")
 # root.minsize(600, 300)
 root.geometry('600x300')
-root.resizable(FALSE, FALSE)
+root.resizable(tk.FALSE, tk.FALSE)
 # root.maxsize(1200, 600)
 
 
@@ -20,24 +20,26 @@ def calculate(*args):
 
 
 mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))  # type: ignore
+mainframe.grid(column=0, row=0, sticky=(
+    tk.N, tk.W, tk.E, tk.S))  # type: ignore
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
-feet = StringVar()
+feet = tk.StringVar()
 feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-feet_entry.grid(column=2, row=1, sticky=(W, E))  # type: ignore
+feet_entry.grid(column=2, row=1, sticky=(tk.W, tk.E))  # type: ignore
 
-meters = StringVar()
+meters = tk.StringVar()
 ttk.Label(mainframe, textvariable=meters).grid(
-    column=2, row=2, sticky=(W, E))  # type: ignore
+    column=2, row=2, sticky=(tk.W, tk.E))  # type: ignore
 
 ttk.Button(mainframe, text="Calculate", command=calculate).grid(
-    column=3, row=3, sticky=W)
+    column=3, row=3, sticky=tk.W)
 
-ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=tk.W)
+ttk.Label(mainframe, text="is equivalent to").grid(
+    column=1, row=2, sticky=tk.E)
+ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=tk.W)
 
 for child in mainframe.winfo_children():
     child.grid_configure(padx=5, pady=5)
