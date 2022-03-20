@@ -25,6 +25,7 @@ class RasterLab(App):
         self.window.add_widget(self.button_interface)
 
         self.import_button = Button(
+            width=55,
             text="Import image",
             size_hint=(0.2, 0.3),
             bold=True,
@@ -32,6 +33,7 @@ class RasterLab(App):
         )
         self.import_button.bind(on_press=self.import_image)  # type: ignore
         self.hist_button = Button(
+            width=55,
             text="Histogram",
             size_hint=(0.2, 0.3),
             bold=True,
@@ -40,29 +42,35 @@ class RasterLab(App):
         self.button_interface.add_widget(self.import_button)
         self.button_interface.add_widget(self.hist_button)
 
-        self.window.add_widget(Image(source="logo.png"))
-        self.greeting = Label(
-            text="greeting",
-            font_size=20,
-            color='#00FFCE'
+        self.chosen_image = Image(
+            source=""
         )
-        self.window.add_widget(self.greeting)
+        self.window.add_widget(self.chosen_image)
+        # self.greeting = Label(
+        #     text="greeting",
+        #     font_size=20,
+        #     color='#00FFCE'
+        # )
+        # self.window.add_widget(self.greeting)
 
-        self.user = TextInput(
-            multiline=False,
-            padding_y=(20, 20),
-            padding_x=(40, 40),
-            size_hint=(1, 0.5),
-            font_size=20
-        )
-        self.window.add_widget(self.user)
-        self.button.bind(on_press=self.callback)  # type: ignore
+        # self.user = TextInput(
+        #     multiline=False,
+        #     padding_y=(20, 20),
+        #     padding_x=(40, 40),
+        #     size_hint=(1, 0.5),
+        #     font_size=20
+        # )
+        # self.window.add_widget(self.user)
 
         return self.window
 
     def import_image(self, event):
-
-        self.greeting.text = "Hello " + self.user.text + "!"
+        global img
+    # allowed file extensions
+        extensions = [('formats', ['.jpg', '.png', 'bmp'])]
+        file_name = filedialog.askopenfilename(filetypes=extensions)
+        print(file_name)
+        self.chosen_image.source = file_name
 
 
 if __name__ == "__main__":
