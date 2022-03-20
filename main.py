@@ -8,6 +8,8 @@ root.title("RasterLab")
 # root.minsize(600, 300)
 root.geometry('600x300')
 root.resizable(tk.FALSE, tk.FALSE)
+icon = tk.PhotoImage(file='icon.png')
+root.iconphoto(False, icon)
 # root.maxsize(1200, 600)
 
 
