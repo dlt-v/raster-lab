@@ -1,16 +1,31 @@
 import tkinter as tk
 from tkinter import ttk
+from turtle import width
 
 from pip import main
 
+# Main program configuration
 root = tk.Tk()
 root.title("RasterLab")
-# root.minsize(600, 300)
 root.geometry('600x300')
 root.resizable(tk.FALSE, tk.FALSE)
 icon = tk.PhotoImage(file='icon.png')
 root.iconphoto(False, icon)
-# root.maxsize(1200, 600)
+
+
+mainframe = ttk.Frame(root, padding="12 12 12 12")
+mainframe.grid(column=0, row=0, sticky=(
+    tk.N, tk.W, tk.E, tk.S))  # type: ignore
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
+
+
+# Import image button
+
+
+# Canvas
+# canvas = tk.Canvas(root, width=600, height=270)
+# canvas.pack()
 
 
 def calculate(*args):
@@ -20,12 +35,6 @@ def calculate(*args):
     except ValueError:
         pass
 
-
-mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(
-    tk.N, tk.W, tk.E, tk.S))  # type: ignore
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
 
 feet = tk.StringVar()
 feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
