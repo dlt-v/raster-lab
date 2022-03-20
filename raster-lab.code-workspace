@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {
+        "files.autoSave": "onFocusChange",
+        "editor.fontFamily": " 'JetBrains Mono',  'Courier New', monospace",
+        "python.analysis.typeCheckingMode": "basic"
+    }
+}
