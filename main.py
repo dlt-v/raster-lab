@@ -43,6 +43,8 @@ def import_image():
 
 
 def compose_histogram():
+    if focused_file == "":
+        return
     new_image = Image.open(focused_file)
     pixel_list = list(new_image.getdata())
     match (new_image.mode):
@@ -67,7 +69,7 @@ def compose_histogram():
             g_values = {}
             b_values = {}
             i = 0
-            while i < 20:
+            while i < len(pixel_list):
                 red_v = str(pixel_list[i][0])
                 blu_v = str(pixel_list[i][1])
                 grn_v = str(pixel_list[i][2])
@@ -86,6 +88,7 @@ def compose_histogram():
                 else:
                     b_values[grn_v] = 1
                 i += 1
+            print(r_values, g_values, b_values)
 
 
 import_button = tk.Button(root,
