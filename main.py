@@ -1,7 +1,11 @@
-from tkinter import Button, Label, Tk, filedialog
+from tkinter import Button, Label, PhotoImage, Tk, filedialog
 from PIL import Image, ImageTk
 
 root = Tk()
+root.geometry("300x50")
+root.title("RasterLab")
+icon = PhotoImage(file='icon.png')
+root.iconphoto(False, icon)
 
 
 def import_image():
@@ -12,7 +16,7 @@ def import_image():
 
 
 import_button = Button(root,
-                       text="import",
+                       text="import image",
                        pady=50,
                        padx=50, command=import_image
                        )
