@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import filedialog
 from typing import Any, Dict
 from PIL import Image, ImageTk
-from pandas import DataFrame
 import matplotlib.pyplot as plt
+import matplotlib as mtl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 root = tk.Tk()
@@ -46,7 +46,7 @@ def import_image():
     image.pack()
 
 
-def plot_histogram(data: Dict[str, int]):
+def plot_histogram(data: Dict[str, int], label: str = "", color: str = "gray") -> None:
     """
         Displays histogram for one segment of data.
     """
@@ -60,10 +60,11 @@ def plot_histogram(data: Dict[str, int]):
             sorted_data[key] = 0
 
     plt.bar(list(sorted_data.keys()),
-            list(sorted_data.values()), color='g')
-
-    plt.title('testing')
-    plt.figure()
+            list(sorted_data.values()), color=color, width=1)
+    # hide tick information on the sides - prevents excessive during resize
+    plt.xticks([])
+    plt.yticks([])
+    plt.title(label)
 
 
 def compose_histogram():
@@ -85,7 +86,8 @@ def compose_histogram():
                 else:
                     color_values[f"{pixel_list[i]}"] = 1
                 i += 1
-            print(color_values.keys())
+            plot_histogram(color_values, 'luma')
+            plt.show()
 
         case 'RGB':
             print("This image is RGB.")
@@ -112,13 +114,18 @@ def compose_histogram():
                 else:
                     b_values[grn_v] = 1
                 i += 1
-            plot_histogram(r_values)
-            plot_histogram(g_values)
-            plot_histogram(b_values)
+            # hide control buttons on figures
+            mtl.rcParams['toolbar'] = 'None'
+
+            plot_histogram(r_values, 'red channel', 'r')
+
+            plt.figure()
+            plot_histogram(g_values, 'green channel', 'g')
+
+            plt.figure()
+            plot_histogram(b_values, 'blue channel', 'b')
 
             plt.show()
-            # plot_histogram(g_values)
-            # plot_histogram(b_values)
 
 
 import_button = tk.Button(root,
