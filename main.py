@@ -6,12 +6,19 @@ import matplotlib.pyplot as plt
 import matplotlib as mtl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+
+def terminate_all():
+    plt.close('all')
+    root.destroy()
+
+
 root = tk.Tk()
 # root.geometry("220x50")
 root.title("RasterLab")
 icon = tk.PhotoImage(file='icon.png')
 root.iconphoto(False, icon)
 root.resizable(False, False)
+root.protocol("WM_DELETE_WINDOW", terminate_all)
 
 focused_file: str = ""
 
