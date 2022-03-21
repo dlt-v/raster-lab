@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog
+from typing import Any, Dict
 from PIL import Image, ImageTk
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 root = tk.Tk()
 # root.geometry("220x50")
@@ -40,6 +44,26 @@ def import_image():
     # it has to be a reference, otherwise the image doesn't load!
     image.image = new_img  # type: ignore
     image.pack()
+
+
+def plot_histogram(data: Dict[str, int]):
+    """
+        Displays histogram for one segment of data.
+    """
+    # data doesn't have to be passed sorted so we have to sort it
+    sorted_data: Dict[str, int] = {}
+    for i in range(256):
+        key = str(i)
+        if key in data.keys():
+            sorted_data[key] = data[key]
+        else:
+            sorted_data[key] = 0
+
+    plt.bar(list(sorted_data.keys()),
+            list(sorted_data.values()), color='g')
+
+    plt.title('testing')
+    plt.figure()
 
 
 def compose_histogram():
@@ -88,7 +112,13 @@ def compose_histogram():
                 else:
                     b_values[grn_v] = 1
                 i += 1
-            print(r_values, g_values, b_values)
+            plot_histogram(r_values)
+            plot_histogram(g_values)
+            plot_histogram(b_values)
+
+            plt.show()
+            # plot_histogram(g_values)
+            # plot_histogram(b_values)
 
 
 import_button = tk.Button(root,
