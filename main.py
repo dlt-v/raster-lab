@@ -259,11 +259,11 @@ def plot_profile() -> None:
     zi = scipy.ndimage.map_coordinates(z, (y, x))
 
     fig, axes = plt.subplots(nrows=2)
-    axes[0].imshow(z)
-    axes[0].plot([x0, x1], [y0, y1], 'ro-')
-    axes[0].axis('image')
+    axes[0].imshow(z)  # type: ignore
+    axes[0].plot([x0, x1], [y0, y1], 'ro-')  # type: ignore
+    axes[0].axis('image')  # type: ignore
 
-    axes[1].plot(zi)
+    axes[1].plot(zi)  # type: ignore
 
     plt.show()
 
