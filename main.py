@@ -4,7 +4,6 @@ from typing import Any, Dict
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import matplotlib as mtl
-import tksheet
 
 
 def terminate_all():
@@ -20,7 +19,10 @@ root.iconphoto(False, icon)
 root.resizable(False, False)
 root.protocol("WM_DELETE_WINDOW", terminate_all)
 mtl.rcParams['toolbar'] = 'None'
-focused_file: str = ""
+focused_file: Dict[str, str] = {
+    "path": "",
+    "mode": ""
+}
 
 
 def import_image():
@@ -28,9 +30,10 @@ def import_image():
     file_path = filedialog.askopenfilename(filetypes=extensions)
     if not file_path:
         return
-    new_img = ImageTk.PhotoImage(Image.open(file_path))
+    opened_image = Image.open(file_path)
+    new_img = ImageTk.PhotoImage(opened_image)
     # label = tk.Label(root, text=file_path)
-    # label.pack()
+    # label.pack()]
 
     new_window = tk.Toplevel(root)
     new_window.iconphoto(False, icon)
@@ -42,11 +45,16 @@ def import_image():
 
     def on_focus(event):
         global focused_file
-        print(f"Focused file changed from: {focused_file} to {file_path}")
-        focused_file = file_path
+        print(f"Focused file changed from: {focused_file['path']}...")
+        focused_file["path"] = file_path
+        focused_file["mode"] = opened_image.mode
+        print(f"...to: {focused_file['path']}.")
         # enable buttons
+        if focused_file["mode"] == 'L':
+            histogram_array["state"] = "normal"
+        else:
+            histogram_array["state"] = "disabled"
         histogram_button["state"] = "normal"
-        histogram_array["state"] = "normal"
 
     new_window.bind("<FocusIn>", on_focus)
 
@@ -101,6 +109,7 @@ def compose_histogram(mode: str):
         return
     new_image = Image.open(focused_file)
     pixel_list = list(new_image.getdata())
+    print(new_image.mode)
     match (new_image.mode):
         # L for greyscale images, RGB for color images (duh)
         case 'L':
@@ -123,7 +132,7 @@ def compose_histogram(mode: str):
                 generate_histogram_table(color_values)
                 print('testing')
 
-        case 'RGB':
+        case 'RGB' | 'RGBA':
             print("This image is RGB.")
             r_values = {}
             g_values = {}
