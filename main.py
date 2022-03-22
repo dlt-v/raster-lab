@@ -258,7 +258,7 @@ def plot_profile() -> None:
     z = Image.open(focused_file["path"])
     zi = scipy.ndimage.map_coordinates(z, (y, x))
 
-    fig, axes = plt.subplots(nrows=2)
+    axes = plt.subplots(nrows=2)
     axes[0].imshow(z)
     axes[0].plot([x0, x1], [y0, y1], 'ro-')
     axes[0].axis('image')
