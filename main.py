@@ -51,9 +51,9 @@ def import_image():
         print(f"...to: {focused_file['path']}.")
         # enable buttons
         if focused_file["mode"] == 'L':
-            histogram_array["state"] = "normal"
+            histogram_array_button["state"] = "normal"
         else:
-            histogram_array["state"] = "disabled"
+            histogram_array_button["state"] = "disabled"
         histogram_button["state"] = "normal"
 
     new_window.bind("<FocusIn>", on_focus)
@@ -107,7 +107,7 @@ def generate_histogram_table(data: Dict[str, int]) -> None:
 def compose_histogram(mode: str):
     if focused_file == "":
         return
-    new_image = Image.open(focused_file)
+    new_image = Image.open(focused_file["path"])
     pixel_list = list(new_image.getdata())
     print(new_image.mode)
     match (new_image.mode):
@@ -187,17 +187,18 @@ histogram_button = tk.Button(root,
 
                              )
 histogram_button.grid(column=2, row=1, padx=5, pady=5)
-histogram_array = tk.Button(root,
-                            text="hist array",
-                            pady=5,
-                            padx=10, command=lambda: compose_histogram('array'),
-                            font=("consolas", 12)
+histogram_array_button = tk.Button(root,
+                                   text="hist array",
+                                   pady=5,
+                                   padx=10, command=lambda: compose_histogram('array'),
+                                   font=("consolas", 12)
 
-                            )
-histogram_array.grid(column=3, row=1, padx=5, pady=5)
+                                   )
+histogram_array_button.grid(column=3, row=1, padx=5, pady=5)
+
 
 # disable buttons at the start since there's no file to operate on
-histogram_array["state"] = "disabled"
+histogram_array_button["state"] = "disabled"
 histogram_button["state"] = "disabled"
 
 
