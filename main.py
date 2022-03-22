@@ -35,13 +35,16 @@ def import_image():
     # label = tk.Label(root, text=file_path)
     # label.pack()]
 
-    new_window = tk.Toplevel(root)
+    new_window = tk.Toplevel(
+        root, width=opened_image.width, height=opened_image.height)
     new_window.iconphoto(False, icon)
     new_window.title(f"RasterLab: {file_path}")
-    geo_img = Image.open(file_path)
-    geometry = f"{geo_img.height}x{geo_img.width}"
+    geometry = f"{opened_image.height}x{opened_image.width}"
+    print(f"Width is: {opened_image.height}\nHeight is: {opened_image.width}")
+    # new_window.geometry(geometry)
+    # new_window.wm_geometry(geometry)
+    # new_window.update()
     new_window.resizable(False, False)
-    new_window.geometry(geometry)
 
     def on_focus(event):
         global focused_file
@@ -52,7 +55,9 @@ def import_image():
         # enable buttons
         if focused_file["mode"] == 'L':
             histogram_array_button["state"] = "normal"
+            plot_profile_button["state"] = "normal"
         else:
+            plot_profile_button["state"] = "disabled"
             histogram_array_button["state"] = "disabled"
         histogram_button["state"] = "normal"
 
@@ -195,11 +200,20 @@ histogram_array_button = tk.Button(root,
 
                                    )
 histogram_array_button.grid(column=3, row=1, padx=5, pady=5)
+plot_profile_button = tk.Button(root,
+                                text="plot profile",
+                                pady=5,
+                                padx=10, command=lambda: compose_histogram('array'),
+                                font=("consolas", 12)
+
+                                )
+plot_profile_button.grid(column=4, row=1, padx=5, pady=5)
 
 
 # disable buttons at the start since there's no file to operate on
 histogram_array_button["state"] = "disabled"
 histogram_button["state"] = "disabled"
+plot_profile_button["state"] = "disabled"
 
 
 root.mainloop()
