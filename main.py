@@ -16,13 +16,6 @@ def terminate_all():
     root.destroy()
 
 
-root = tk.Tk()
-# root.geometry("220x50")
-root.title("RasterLab")
-icon = tk.PhotoImage(file='icon.png')
-root.iconphoto(False, icon)
-root.resizable(False, False)
-root.protocol("WM_DELETE_WINDOW", terminate_all)
 mpl.rcParams['toolbar'] = 'None'
 focused_file: Dict[str, str] = {
     "path": "",
@@ -47,7 +40,7 @@ def import_image():
 
     new_window = tk.Toplevel(
         root, width=opened_image.width, height=opened_image.height)
-    new_window.iconphoto(False, icon)
+    # new_window.iconphoto(False, icon)
     new_window.title(f"RasterLab: {file_path}")
     new_window.resizable(False, False)
 
@@ -169,7 +162,7 @@ def generate_histogram_table(data: Dict[str, int]) -> None:
     """
     sorted_data = sort_histogram_data(data)
     new_window = tk.Toplevel(root)
-    new_window.iconphoto(False, icon)
+    # new_window.iconphoto(False, icon)
     new_window.resizable(False, False)
     # sheet = tksheet.Sheet(new_window)
     # sheet.grid()
@@ -268,13 +261,63 @@ def plot_profile() -> None:
     plt.show()
 
 
-import_button = tk.Button(root,
-                          text="import image",
-                          pady=5,
-                          padx=10, command=import_image,
-                          font=("consolas", 12)
-                          )
-import_button.grid(column=1, row=1, padx=5, pady=5)
+# define main menu
+root = tk.Tk()
+# root.geometry("220x50")
+root.title("RasterLab")
+# icon = tk.PhotoImage(file='icon.png')
+# root.iconphoto(False, icon)
+root.resizable(False, False)
+root.protocol("WM_DELETE_WINDOW", terminate_all)
+
+
+def show_file_menu():
+    """
+    Render FILE menu with buttons to import and save an image.
+    """
+    new_window = tk.Toplevel(root)
+    new_window.title(f"FILE")
+    new_window.resizable(False, False)
+
+    import_button = tk.Button(new_window,
+                              text="import image",
+                              pady=5,
+                              padx=10, command=import_image,
+                              font=("consolas", 12)
+                              )
+    import_button.grid(column=1, row=1, padx=5, pady=5)
+
+    save_button = tk.Button(new_window,
+                            text="save image",
+                            pady=5,
+                            padx=10, command=lambda: print('save'),
+                            font=("consolas", 12)
+                            )
+    save_button.grid(column=2, row=1, padx=5, pady=5)
+
+
+def show_analyze_menu():
+    """
+    Render ANALYZE menu with buttons for plotting profile and creating histograms.
+    """
+    pass
+
+
+file_button = tk.Button(root,
+                        text="FILE",
+                        pady=5,
+                        padx=10, command=show_file_menu,
+                        font=("consolas", 12)
+                        )
+file_button.grid(column=1, row=1, padx=5, pady=5)
+
+analysis_button = tk.Button(root,
+                            text="ANALYZE",
+                            pady=5,
+                            padx=10, command=show_analyze_menu,
+                            font=("consolas", 12)
+                            )
+analysis_button.grid(column=2, row=1, padx=5, pady=5)
 
 histogram_button = tk.Button(root,
                              text="hist plot",
@@ -300,7 +343,11 @@ plot_profile_button = tk.Button(root,
 
                                 )
 plot_profile_button.grid(column=4, row=1, padx=5, pady=5)
+# variable = tk.StringVar(root)
+# variable.set("one")
 
+# w = tk.OptionMenu(root, variable, "one", "two", "three")
+# w.grid(column=4, row=2, padx=5, pady=5)
 
 # disable buttons at the start since there's no data to operate on
 histogram_array_button["state"] = "disabled"
