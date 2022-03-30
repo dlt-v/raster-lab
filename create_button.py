@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-def create_button(root, text: str, command) -> tk.Button:
+def create_button(root: tk.Toplevel | tk.Tk, text: str, command) -> tk.Button:
     """
     Given the root element, text and command, the function returns a ready tkinter Button element.
     """

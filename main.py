@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -29,10 +29,11 @@ plot_profile_data: Dict[str, List[int]] = {
 }
 
 
-def import_image():
+def import_image(root_window: tk.Toplevel):
     """
     Asks for the image in file explorer and then imports it to the program, creating a dedicated widget for it.
     """
+    root_window.destroy()
     extensions = [('formats', ['.jpg', '.png', '.bmp', '.jpeg'])]
     file_path = filedialog.askopenfilename(filetypes=extensions)
     if not file_path:
@@ -50,24 +51,25 @@ def import_image():
         """
         Switches the focused_file data to the current image in order for other functions to operate on them. Resets the plot profile data since it's another image.
         """
-        global focused_file
-        global plot_profile_data
-
-        # reset plot profile data for new image
-        plot_profile_data["start"] = [-1, -1]
-        plot_profile_data["end"] = [-1, -1]
-        plot_profile_button["state"] = "disabled"
-
+        global focused_file, plot_profile_data
         focused_file["path"] = file_path
         focused_file["mode"] = opened_image.mode
-        # print(f"Focused file changed to: {focused_file['path']}...")
-        # enable buttons
-        if focused_file["mode"] == 'L':
-            histogram_array_button["state"] = "normal"
-        else:
+        # reset plot profile data for new image
+        try:
+            plot_profile_data["start"] = [-1, -1]
+            plot_profile_data["end"] = [-1, -1]
             plot_profile_button["state"] = "disabled"
-            histogram_array_button["state"] = "disabled"
-        histogram_button["state"] = "normal"
+
+            # print(f"Focused file changed to: {focused_file['path']}...")
+            # enable buttons
+            if focused_file["mode"] == 'L':
+                histogram_array_button["state"] = "normal"
+            else:
+                plot_profile_button["state"] = "disabled"
+                histogram_array_button["state"] = "disabled"
+            histogram_button["state"] = "normal"
+        except:
+            print("Couldn't change state of some buttons.")
 
     def on_scroll(event):
         """
@@ -263,6 +265,49 @@ def plot_profile() -> None:
     plt.show()
 
 
+def negate_image(window_to_close: tk.Toplevel) -> None:
+    print('AAAA', focused_file["path"])
+    window_to_close.destroy()
+    if focused_file == "":
+        return
+    new_image = Image.open(focused_file["path"])
+    negated_image = ''
+
+    if new_image.mode == 'L':
+
+        pixel_list: List[int] = list(new_image.getdata())
+        negated_pixel_list: List[int] = []
+
+        for pixel in pixel_list:
+            negated_pixel_list.append(abs(pixel - 255))
+
+        negated_image = Image.new(new_image.mode, new_image.size)
+        negated_image.putdata(negated_pixel_list)
+    elif new_image.mode == 'RGB' or new_image.mode == 'RGBA':
+
+        pixel_rgb_list: List[List[int]] = list(new_image.getdata())
+        negated_pixel_rgb_list: List[Tuple[int, int, int]] = []
+
+        for pixel in pixel_rgb_list:
+            new_pixel = (abs(pixel[0] - 255),
+                         abs(pixel[1] - 255), abs(pixel[2] - 255))
+            negated_pixel_rgb_list.append(new_pixel)
+
+        negated_image = Image.new(new_image.mode, new_image.size)
+        negated_image.putdata(negated_pixel_rgb_list)  # type: ignore
+
+    negated_image = ImageTk.PhotoImage(negated_image)
+
+    new_window = tk.Toplevel(
+        root, width=new_image.width, height=new_image.height)
+    # new_window.iconphoto(False, icon)
+    new_window.title("RasterLab: {file_path}")
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=negated_image)
+    image.image = negated_image  # type: ignore
+    image.pack()
+
+
 # define main menu
 root = tk.Tk()
 # root.geometry("220x50")
@@ -281,7 +326,8 @@ def show_file_menu():
     new_window.title(f"FILE")
     new_window.resizable(False, False)
 
-    import_button = create_button(new_window, "import image", import_image)
+    import_button = create_button(
+        new_window, "import image", lambda: import_image(new_window))
     save_button = create_button(
         new_window, "save image", lambda: print('save'))
     import_button.grid(column=1, row=1, padx=5, pady=5)
@@ -293,59 +339,44 @@ def show_analyze_menu():
     """
     Render ANALYZE menu with buttons for plotting profile and creating histograms.
     """
-    pass
+    new_window = tk.Toplevel(root)
+    new_window.title(f"FILE")
+    new_window.resizable(False, False)
+    global histogram_button
+    histogram_button = create_button(
+        new_window, "hist plot", lambda: compose_histogram('plot'))
+    global histogram_array_button
+    histogram_array_button = create_button(
+        new_window, "hist array", lambda: compose_histogram('array'))
+    global plot_profile_button
+    plot_profile_button = create_button(
+        new_window, "plot profile", plot_profile)
+    histogram_button.grid(column=2, row=1, padx=5, pady=5)
+    histogram_array_button.grid(column=3, row=1, padx=5, pady=5)
+    plot_profile_button.grid(column=4, row=1, padx=5, pady=5)
+
+    # disable buttons at the start since there's no data to operate on
+    histogram_array_button["state"] = "disabled"
+    histogram_button["state"] = "disabled"
+    plot_profile_button["state"] = "disabled"
 
 
-file_button = tk.Button(root,
-                        text="FILE",
-                        pady=5,
-                        padx=10, command=show_file_menu,
-                        font=("consolas", 12)
-                        )
+def show_process_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"PROCESS")
+    new_window.resizable(False, False)
+
+    negation_button = create_button(
+        new_window, "negation", lambda: negate_image(new_window))
+    negation_button.grid(column=1, row=1, padx=5, pady=5)
+
+
+file_button = create_button(root, "FILE", show_file_menu)
+analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
+process_button = create_button(root, "PROCESS", show_process_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
-
-analysis_button = tk.Button(root,
-                            text="ANALYZE",
-                            pady=5,
-                            padx=10, command=show_analyze_menu,
-                            font=("consolas", 12)
-                            )
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
-
-histogram_button = tk.Button(root,
-                             text="hist plot",
-                             pady=5,
-                             padx=10, command=lambda: compose_histogram('plot'),
-                             font=("consolas", 12)
-
-                             )
-histogram_button.grid(column=2, row=1, padx=5, pady=5)
-histogram_array_button = tk.Button(root,
-                                   text="hist array",
-                                   pady=5,
-                                   padx=10, command=lambda: compose_histogram('array'),
-                                   font=("consolas", 12)
-
-                                   )
-histogram_array_button.grid(column=3, row=1, padx=5, pady=5)
-plot_profile_button = tk.Button(root,
-                                text="plot profile",
-                                pady=5,
-                                padx=10, command=plot_profile,
-                                font=("consolas", 12)
-
-                                )
-plot_profile_button.grid(column=4, row=1, padx=5, pady=5)
-# variable = tk.StringVar(root)
-# variable.set("one")
-
-# w = tk.OptionMenu(root, variable, "one", "two", "three")
-# w.grid(column=4, row=2, padx=5, pady=5)
-
-# disable buttons at the start since there's no data to operate on
-histogram_array_button["state"] = "disabled"
-histogram_button["state"] = "disabled"
-plot_profile_button["state"] = "disabled"
+process_button.grid(column=3, row=1, padx=5, pady=5)
 
 
 root.mainloop()
