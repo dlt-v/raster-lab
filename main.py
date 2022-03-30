@@ -7,6 +7,8 @@ import matplotlib as mpl
 import numpy as np
 import scipy.ndimage
 
+from create_button import create_button
+
 
 def terminate_all():
     """
@@ -279,21 +281,12 @@ def show_file_menu():
     new_window.title(f"FILE")
     new_window.resizable(False, False)
 
-    import_button = tk.Button(new_window,
-                              text="import image",
-                              pady=5,
-                              padx=10, command=import_image,
-                              font=("consolas", 12)
-                              )
+    import_button = create_button(new_window, "import image", import_image)
+    save_button = create_button(
+        new_window, "save image", lambda: print('save'))
     import_button.grid(column=1, row=1, padx=5, pady=5)
-
-    save_button = tk.Button(new_window,
-                            text="save image",
-                            pady=5,
-                            padx=10, command=lambda: print('save'),
-                            font=("consolas", 12)
-                            )
     save_button.grid(column=2, row=1, padx=5, pady=5)
+    save_button["state"] = "disabled"
 
 
 def show_analyze_menu():
