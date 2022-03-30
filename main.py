@@ -266,7 +266,6 @@ def plot_profile() -> None:
 
 
 def negate_image(window_to_close: tk.Toplevel) -> None:
-    print('AAAA', focused_file["path"])
     window_to_close.destroy()
     if focused_file == "":
         return
@@ -301,7 +300,7 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
     new_window = tk.Toplevel(
         root, width=new_image.width, height=new_image.height)
     # new_window.iconphoto(False, icon)
-    new_window.title("RasterLab: {file_path}")
+    new_window.title(f"RasterLab: {focused_file['path']}")
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=negated_image)
     image.image = negated_image  # type: ignore
