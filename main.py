@@ -1,3 +1,4 @@
+from email.policy import default
 import tkinter as tk
 from tkinter import filedialog
 from typing import Dict, List, Tuple
@@ -8,6 +9,8 @@ import numpy as np
 import scipy.ndimage
 
 from create_button import create_button
+
+from ImageWindow import ImageWindow
 
 
 def terminate_all():
@@ -38,6 +41,7 @@ def import_image(root_window: tk.Toplevel):
     file_path = filedialog.askopenfilename(filetypes=extensions)
     if not file_path:
         return
+
     opened_image = Image.open(file_path)
     new_img = ImageTk.PhotoImage(opened_image)
 
@@ -307,6 +311,177 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
     image.pack()
 
 
+def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) -> None:
+    window_to_close.destroy()
+    if not value:
+        value = 2
+    try:
+        value = int(value)
+    except:
+        return
+
+    if focused_file == "":
+        return
+    new_image = Image.open(focused_file["path"])
+    processed_image = ''
+
+    if new_image.mode != 'L':
+        return
+
+    pixel_list = list(new_image.getdata())
+    processed_pixel_list: List[int] = []
+
+    goal_table: List[int] = []
+
+    for i in range(value):
+        for j in range(int(255/value)):
+            goal_table.append(int(255/value * (i)))
+
+    for pixel in pixel_list:
+        if isSimple:
+            if pixel < (value):
+                processed_pixel_list.append(0)
+            else:
+                processed_pixel_list.append(255)
+        else:
+            processed_pixel_list.append(goal_table[pixel])
+
+    print(goal_table)
+
+    processed_image = Image.new(new_image.mode, new_image.size)
+    processed_image.putdata(processed_pixel_list)
+    processed_image = ImageTk.PhotoImage(processed_image)
+
+    new_window = tk.Toplevel(
+        root, width=new_image.width, height=new_image.height)
+    new_window.title(f"RasterLab: {focused_file['path']}")
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=processed_image)
+    image.image = processed_image  # type: ignore
+    image.pack()
+
+
+def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
+    window_to_close.destroy()
+    try:
+        value = int(value)
+    except:
+        return
+
+    if focused_file == "":
+        return
+    new_image = Image.open(focused_file["path"])
+    processed_image = ''
+
+    goal_table: List[int] = []
+    for i in range(value):
+        for j in range(int(256/value)):
+            goal_table.append(int(256/value * (i)))
+
+    if new_image.mode == 'RGB' or new_image.mode == 'RGBA':
+
+        pixel_rgb_list: List[List[int]] = list(new_image.getdata())
+        negated_pixel_rgb_list: List[Tuple[int, int, int]] = []
+
+        for pixel in pixel_rgb_list:
+            new_pixel = (goal_table[pixel[0]],
+                         goal_table[pixel[1]],
+                         goal_table[pixel[2]]
+                         )
+            print(new_pixel)
+            negated_pixel_rgb_list.append(new_pixel)
+
+        negated_image = Image.new(new_image.mode, new_image.size)
+        negated_image.putdata(negated_pixel_rgb_list)  # type: ignore
+
+        negated_image = ImageTk.PhotoImage(negated_image)
+
+    new_window = tk.Toplevel(
+        root, width=new_image.width, height=new_image.height)
+    # new_window.iconphoto(False, icon)
+    new_window.title(f"RasterLab: {focused_file['path']}")
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=negated_image)
+    image.image = negated_image  # type: ignore
+    image.pack()
+
+    return
+
+
+def generate_lut(pixel_list: List[int]):
+    lut = {}
+    for pixel in pixel_list:
+        if pixel in lut:
+            lut[pixel] += 1
+        else:
+            lut[pixel] = 0
+    for i in range(256):
+        if i not in lut:
+            lut[i] = 0
+    return lut
+
+
+def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
+    window_to_close.destroy()
+    if focused_file == "":
+        return
+    new_image = Image.open(focused_file["path"])
+    processed_image = ''
+
+    if new_image.mode != 'L':
+        return
+
+    pixel_list = list(new_image.getdata())
+    processed_pixel_list: List[int] = []
+
+    lut_table = generate_lut(pixel_list)
+    end: int = 0
+    start: int = 0
+
+    if p1 and p2 and q3 and q4:
+        start = int(p1)
+        end = int(p2)
+        q3 = int(q3)
+        q4 = int(q4)
+    else:
+        q3 = 0
+        q4 = 255
+        for i in range(255):
+            if lut_table[i] != 0:
+                end = i
+
+        for i in range(255, 0, -1):
+            try:
+                if lut_table[i] != 0:
+                    start = i
+            except:
+                print('elo')
+    for pixel in pixel_list:
+
+        if pixel < q3:
+            processed_pixel_list.append(q3)
+        elif pixel > q4:
+            processed_pixel_list.append(q4)
+        else:
+            processed_pixel_list.append(
+                int(((pixel - start) * q4) / (end - start))
+            )
+        # print(pixel, ':', int(((pixel - start) * 255) / (end - start)))
+    print(len(processed_pixel_list))
+    print(max(processed_pixel_list), min(processed_pixel_list))
+    processed_image = Image.new(new_image.mode, new_image.size)
+    processed_image.putdata(processed_pixel_list)
+    processed_image = ImageTk.PhotoImage(processed_image)
+
+    new_window = tk.Toplevel(
+        root, width=new_image.width, height=new_image.height)
+    new_window.title(f"RasterLab: {focused_file['path']}")
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=processed_image)
+    image.image = processed_image  # type: ignore
+    image.pack()
+
+
 # define main menu
 root = tk.Tk()
 # root.geometry("220x50")
@@ -367,7 +542,82 @@ def show_process_menu():
 
     negation_button = create_button(
         new_window, "negation", lambda: negate_image(new_window))
+    treshhold_button = create_button(
+        new_window, "threshold", lambda: show_threshold_menu(new_window))
+    posterize_button = create_button(
+        new_window, "posterize", lambda: show_posterize_menu(new_window))
+    stretch_button = create_button(
+        new_window, "stretch", lambda: show_stretch_menu(new_window))
     negation_button.grid(column=1, row=1, padx=5, pady=5)
+    treshhold_button.grid(column=1, row=2, padx=5, pady=5)
+    posterize_button.grid(column=1, row=3, padx=5, pady=5)
+    stretch_button.grid(column=1, row=3, padx=5, pady=5)
+
+
+def show_threshold_menu(window_to_destroy):
+    window_to_destroy.destroy()
+    new_window = tk.Toplevel(root)
+    new_window.title(f"THRESHOLD")
+    new_window.resizable(False, False)
+
+    tk.Label(new_window, text="Value: ", font=("Arial", 12)).grid(
+        column=1, row=1, padx=10, pady=10)
+    e1 = tk.Entry(new_window, font=("Arial", 12))
+    e1.grid(
+        column=2, row=1, padx=10, pady=10)
+
+    create_button(
+        new_window, "multilevel", lambda: threshold_image(new_window, e1.get(), False)).grid(column=2, row=2, padx=5, pady=5)
+    create_button(
+        new_window, "simple", lambda: threshold_image(new_window, e1.get(), True)).grid(column=1, row=2, padx=5, pady=5)
+
+
+def show_stretch_menu(window_to_destroy):
+    window_to_destroy.destroy()
+    new_window = tk.Toplevel(root)
+    new_window.title(f"STRETCH")
+    new_window.resizable(False, False)
+
+    tk.Label(new_window, text="p1: ", font=("Arial", 12)).grid(
+        column=1, row=1, padx=10, pady=10)
+    p1 = tk.Entry(new_window, font=("Arial", 12))
+    p1.grid(
+        column=2, row=1, padx=10, pady=10)
+    tk.Label(new_window, text="p2: ", font=("Arial", 12)).grid(
+        column=1, row=2, padx=10, pady=10)
+    p2 = tk.Entry(new_window, font=("Arial", 12))
+    p2.grid(
+        column=2, row=2, padx=10, pady=10)
+
+    tk.Label(new_window, text="q3: ", font=("Arial", 12)).grid(
+        column=1, row=3, padx=10, pady=10)
+    q3 = tk.Entry(new_window, font=("Arial", 12))
+    q3.grid(
+        column=2, row=3, padx=10, pady=10)
+    tk.Label(new_window, text="q4: ", font=("Arial", 12)).grid(
+        column=1, row=4, padx=10, pady=10)
+    q4 = tk.Entry(new_window, font=("Arial", 12))
+    q4.grid(
+        column=2, row=4, padx=10, pady=10)
+
+    create_button(
+        new_window, "stretch", lambda: stretch_histogram(new_window, p1.get(), p2.get(), q3.get(), q4.get())).grid(column=2, row=5, padx=5, pady=5)
+
+
+def show_posterize_menu(window_to_destroy):
+    window_to_destroy.destroy()
+    new_window = tk.Toplevel(root)
+    new_window.title(f"POSTERIZE")
+    new_window.resizable(False, False)
+
+    tk.Label(new_window, text="Bins: ", font=("Arial", 12)).grid(
+        column=1, row=1, padx=10, pady=10)
+    e1 = tk.Entry(new_window, font=("Arial", 12))
+    e1.grid(
+        column=2, row=1, padx=10, pady=10)
+
+    create_button(
+        new_window, "process", lambda: posterize_image(new_window, e1.get())).grid(column=2, row=2, padx=5, pady=5)
 
 
 file_button = create_button(root, "FILE", show_file_menu)
