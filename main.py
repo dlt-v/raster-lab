@@ -1,3 +1,4 @@
+from ast import Pass
 from email.policy import default
 import tkinter as tk
 from tkinter import filedialog
@@ -7,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import scipy.ndimage
+import cv2 as cv
 
 from create_button import create_button
 
@@ -688,12 +690,381 @@ def show_posterize_menu(window_to_destroy):
         new_window, "process", lambda: posterize_image(new_window, e1.get())).grid(column=2, row=2, padx=5, pady=5)
 
 
+def filter_image(filter_option: int, edge_option: int, a=0, b=0, c=0) -> None:
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'])
+    title: str = ""
+    match edge_option:
+        case 0:  # isolated
+            img = cv.copyMakeBorder(
+                img, 10, 10, 10, 10,
+                cv.BORDER_ISOLATED, None, value=0
+            )
+        case 1:  # reflect
+            img = cv.copyMakeBorder(
+                img, 10, 10, 10, 10,
+                cv.BORDER_REFLECT, None, value=0
+            )
+        case 2:  # replicate
+            img = cv.copyMakeBorder(
+                img, 10, 10, 10, 10,
+                cv.BORDER_REPLICATE, None, value=0
+            )
+
+    match filter_option:
+        case 0:
+            blur = cv.GaussianBlur(img, (5, 5), 0)
+            title = 'Gaussian'
+        case 1:
+            blur = cv.blur(img, (5, 5))
+            title = 'Blur'
+        case 2:
+            blur = cv.Sobel(img, cv.CV_64F, a, b, c)
+            title = 'edge_sobel'
+        case 3:
+            blur = cv.Laplacian(img, a)
+            title = 'edge_laplacian'
+        case 4:
+            blur = cv.Canny(img, a, b)
+            title = 'edge_canny'
+        case 5:
+            kernel = np.array([
+                [0, -1, 0],
+                [-1, 5, -1],
+                [0, -1, 0]
+            ])
+            blur = cv.filter2D(img, -1, kernel)
+            title = 'sharpen_a'
+        case 6:
+            kernel = np.array([
+                [-1, -1, -1],
+                [-1, 9, -1],
+                [-1, -1, -1]
+            ])
+            blur = cv.filter2D(img, -1, kernel)
+            title = 'sharpen_b'
+        case 7:
+            kernel = np.array([
+                [1, -2, 1],
+                [-2, 5, -2],
+                [1, -2, 1]
+            ])
+            blur = cv.filter2D(img, -1, kernel)
+            title = 'sharpen_c'
+        case 8:
+            match a:
+                case 0:
+                    kernel = np.array([
+                        [1, 1, 1],
+                        [1, -2, 1],
+                        [-1, -1, -1]
+                    ])
+                case 1:
+                    kernel = np.array([
+                        [1, 1, -1],
+                        [1, -2, -1],
+                        [1, 1, -1]
+                    ])
+                case 2:
+                    kernel = np.array([
+                        [-1, 1, 1],
+                        [-1, -2, 1],
+                        [-1, 1, 1]
+                    ])
+                case 3:
+                    kernel = np.array([
+                        [-1, -1, -1],
+                        [1, -2, 1],
+                        [1, 1, 1]
+                    ])
+                case 4:
+                    kernel = np.array([
+                        [1, 1, 1],
+                        [-1, -2, 1],
+                        [-1, -1, 1]
+                    ])
+                case 5:
+                    kernel = np.array([
+                        [1, 1, 1],
+                        [1, -2, -1],
+                        [1, -1, -1]
+                    ])
+                case 6:
+                    kernel = np.array([
+                        [1, -1, -1],
+                        [1, -2, -1],
+                        [1, 1, 1]
+                    ])
+                case 7:
+                    kernel = np.array([
+                        [-1, -1, 1],
+                        [-1, -2, 1],
+                        [1, 1, 1]
+                    ])
+            title = 'Prewitt'
+            blur = cv.filter2D(img,  -1, kernel)
+        case 9:
+            kernel = a
+            title = 'Custom'
+            blur = cv.filter2D(img,  -1, kernel)
+        case 10:
+            title = f'Median {a}x{a}'
+            blur = cv.medianBlur(img, a)
+
+    plt.imshow(blur), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_filter_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"FILTER")
+    new_window.resizable(False, False)
+
+    button1 = create_button(
+        new_window,
+        "blur",
+        lambda: show_blur_submenu(new_window)
+    )
+    button2 = create_button(
+        new_window,
+        "edge detection",
+        lambda: show_edge_submenu(new_window)
+    )
+    button3 = create_button(
+        new_window,
+        "sharpen",
+        lambda: show_sharpen_submenu(new_window)
+    )
+    button4 = create_button(
+        new_window,
+        "custom_kernel",
+        lambda: show_custom_kernel_submenu(new_window)
+    )
+    button5 = create_button(
+        new_window,
+        "median_filter",
+        lambda: show_median_submenu(new_window)
+    )
+
+    button1.grid(column=1, row=1, padx=5, pady=5)
+    button2.grid(column=1, row=2, padx=5, pady=5)
+    button3.grid(column=1, row=3, padx=5, pady=5)
+    button4.grid(column=1, row=4, padx=5, pady=5)
+    button5.grid(column=1, row=5, padx=5, pady=5)
+
+    def show_edge_mode_submenu(window, option: int, a=0, b=0, c=0):
+        if option != 9:
+            a = int(a)
+            b = int(b)
+            c = int(c)
+        window.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Edge Mode")
+        new_window.resizable(False, False)
+
+        button1 = create_button(
+            new_window,
+            "Isolated",
+            lambda: filter_image(option, 0, a, b, c)
+        )
+        button2 = create_button(
+            new_window,
+            "Reflect",
+            lambda: filter_image(option, 1, a, b, c)
+        )
+        button3 = create_button(
+            new_window,
+            "Replicate",
+            lambda: filter_image(option, 2, a, b, c)
+        )
+
+        button1.grid(column=1, row=2, padx=5, pady=5)
+        button2.grid(column=1, row=3, padx=5, pady=5)
+        button3.grid(column=1, row=4, padx=5, pady=5)
+
+    def show_blur_submenu(to_destroy):
+        to_destroy.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Blur")
+        new_window.resizable(False, False)
+
+        button1 = create_button(
+            new_window,
+            "blur",
+            lambda: show_edge_mode_submenu(new_window, 0)
+        )
+        button2 = create_button(
+            new_window,
+            "gaussian",
+            lambda: show_edge_mode_submenu(new_window, 1)
+        )
+
+        button1.grid(column=1, row=1, padx=5, pady=5)
+        button2.grid(column=1, row=2, padx=5, pady=5)
+
+    def show_edge_submenu(to_destroy):
+        to_destroy.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Edge detection")
+        new_window.resizable(False, False)
+        a = tk.Entry(new_window, font=("Arial", 12))
+        b = tk.Entry(new_window, font=("Arial", 12))
+        c = tk.Entry(new_window, font=("Arial", 12))
+        a.grid(
+            column=1, row=1, padx=10, pady=10)
+        b.grid(
+            column=2, row=1, padx=10, pady=10)
+        c.grid(
+            column=3, row=1, padx=10, pady=10)
+
+        tk.Label(new_window, text="Prewitt\n0-N\n1-W\n2-E\n3-S\n4-NE\n5-NW\n6-SW\n7-SE", font=("Arial", 12)).grid(
+            column=2, row=2, padx=10, pady=10)
+
+        button1 = create_button(
+            new_window,
+            "Sobel (a, b, c)",
+            lambda: show_edge_mode_submenu(new_window,
+                                           2, a.get(), b.get(), c.get())
+        )
+        button2 = create_button(
+            new_window,
+            "Laplacian (a)",
+            lambda: show_edge_mode_submenu(new_window, 3, a.get())
+        )
+        button3 = create_button(
+            new_window,
+            "Canny (a, b)",
+            lambda: show_edge_mode_submenu(new_window, 4, a.get(), b.get())
+        )
+        button4 = create_button(
+            new_window,
+            "Prewitt (a - kierunek)",
+            lambda: show_edge_mode_submenu(new_window, 8, a.get())
+        )
+
+        button1.grid(column=1, row=2, padx=5, pady=5)
+        button2.grid(column=1, row=3, padx=5, pady=5)
+        button3.grid(column=1, row=4, padx=5, pady=5)
+        button4.grid(column=1, row=5, padx=5, pady=5)
+
+    def show_sharpen_submenu(to_destroy):
+        to_destroy.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Sharpen")
+        new_window.resizable(False, False)
+
+        button1 = create_button(
+            new_window,
+            "Option A",
+            lambda: show_edge_mode_submenu(new_window, 5)
+        )
+        button2 = create_button(
+            new_window,
+            "Option B",
+            lambda: show_edge_mode_submenu(new_window, 6)
+        )
+        button3 = create_button(
+            new_window,
+            "Option C",
+            lambda: show_edge_mode_submenu(new_window, 7)
+        )
+
+        button1.grid(column=1, row=2, padx=5, pady=5)
+        button2.grid(column=1, row=3, padx=5, pady=5)
+        button3.grid(column=1, row=4, padx=5, pady=5)
+
+    def show_custom_kernel_submenu(to_destroy):
+        to_destroy.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Edge detection")
+        new_window.resizable(False, False)
+        a = tk.Entry(new_window, font=("Arial", 12))
+        b = tk.Entry(new_window, font=("Arial", 12))
+        c = tk.Entry(new_window, font=("Arial", 12))
+        a.grid(
+            column=1, row=1, padx=10, pady=10)
+        b.grid(
+            column=2, row=1, padx=10, pady=10)
+        c.grid(
+            column=3, row=1, padx=10, pady=10)
+
+        d = tk.Entry(new_window, font=("Arial", 12))
+        e = tk.Entry(new_window, font=("Arial", 12))
+        f = tk.Entry(new_window, font=("Arial", 12))
+        d.grid(
+            column=1, row=2, padx=10, pady=10)
+        e.grid(
+            column=2, row=2, padx=10, pady=10)
+        f.grid(
+            column=3, row=2, padx=10, pady=10)
+
+        g = tk.Entry(new_window, font=("Arial", 12))
+        h = tk.Entry(new_window, font=("Arial", 12))
+        i = tk.Entry(new_window, font=("Arial", 12))
+        g.grid(
+            column=1, row=3, padx=10, pady=10)
+        h.grid(
+            column=2, row=3, padx=10, pady=10)
+        i.grid(
+            column=3, row=3, padx=10, pady=10)
+
+        def submit_kernel():
+            kernel_sum = int(a.get()) + int(b.get()) + int(c.get()) + int(d.get()) + int(
+                e.get()) + int(f.get()) + int(g.get()) + int(h.get()) + int(i.get())
+            kernel = np.array(
+                [
+                    [int(a.get()), int(b.get()), int(c.get())],
+                    [int(d.get()), int(e.get()), int(f.get())],
+                    [int(g.get()), int(h.get()), int(i.get())]
+                ]
+            ) / kernel_sum
+            show_edge_mode_submenu(new_window, 9, kernel)
+
+        button1 = create_button(
+            new_window,
+            "Submit",
+            lambda: submit_kernel()
+        )
+
+        button1.grid(column=1, row=4, padx=5, pady=5)
+
+    def show_median_submenu(to_destroy):
+        to_destroy.destroy()
+        new_window = tk.Toplevel(root)
+        new_window.title(f"Median")
+        new_window.resizable(False, False)
+
+        button1 = create_button(
+            new_window,
+            "3x3",
+            lambda: show_edge_mode_submenu(new_window, 10, 3)
+        )
+        button2 = create_button(
+            new_window,
+            "5x5",
+            lambda: show_edge_mode_submenu(new_window, 10, 5)
+        )
+        button3 = create_button(
+            new_window,
+            "7x7",
+            lambda: show_edge_mode_submenu(new_window, 10, 7)
+        )
+
+        button1.grid(column=1, row=2, padx=5, pady=5)
+        button2.grid(column=1, row=3, padx=5, pady=5)
+        button3.grid(column=1, row=4, padx=5, pady=5)
+
+
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
+filter_button = create_button(root, "FILTER", show_filter_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
+filter_button.grid(column=4, row=1, padx=5, pady=5)
 
 
 root.mainloop()
