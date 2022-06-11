@@ -1,7 +1,7 @@
 from email.policy import default
 import tkinter as tk
 from tkinter import filedialog
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -9,8 +9,6 @@ import numpy as np
 import scipy.ndimage
 
 from create_button import create_button
-
-from ImageWindow import ImageWindow
 
 
 def terminate_all():
@@ -22,14 +20,26 @@ def terminate_all():
 
 
 mpl.rcParams['toolbar'] = 'None'
-focused_file: Dict[str, str] = {
+focused_file: Dict[str, Any] = {
     "path": "",
-    "mode": ""
+    "mode": "",
+    "image": ""
 }
 plot_profile_data: Dict[str, List[int]] = {
     "start": [-1, -1],
     "end": [-1, -1]
 }
+
+
+def add_event_listeners(window, image):
+
+    def on_focus(event):
+        global focused_file, plot_profile_data
+        focused_file["path"] = ''
+        focused_file["mode"] = image.mode
+        focused_file["image"] = image
+
+    window.bind("<FocusIn>", on_focus)
 
 
 def import_image(root_window: tk.Toplevel):
@@ -58,6 +68,7 @@ def import_image(root_window: tk.Toplevel):
         global focused_file, plot_profile_data
         focused_file["path"] = file_path
         focused_file["mode"] = opened_image.mode
+        focused_file["image"] = opened_image
         # reset plot profile data for new image
         try:
             plot_profile_data["start"] = [-1, -1]
@@ -109,6 +120,7 @@ def import_image(root_window: tk.Toplevel):
             Store plot profile endpoints in global variable.
         """
         global plot_profile_data
+        global plot_profile_button
         global focused_file
         if focused_file["mode"] != "L":
             return
@@ -185,9 +197,13 @@ def compose_histogram(mode: str):
     """
     Collects data about the image to render later in a histogram. Some aspects of the program are available depending of the image mode (greyscale, RGB, RGBA.)
     """
-    if focused_file == "":
+    if focused_file["image"]:
+        new_image = focused_file["image"]
+    elif focused_file["path"]:
+
+        new_image = Image.open(focused_file["path"])
+    elif focused_file == "":
         return
-    new_image = Image.open(focused_file["path"])
     pixel_list = list(new_image.getdata())
     match (new_image.mode):
         # L for greyscale images, RGB for color images (duh)
@@ -271,9 +287,13 @@ def plot_profile() -> None:
 
 def negate_image(window_to_close: tk.Toplevel) -> None:
     window_to_close.destroy()
-    if focused_file == "":
+    if focused_file["image"]:
+        new_image = focused_file["image"]
+    elif focused_file["path"]:
+
+        new_image = Image.open(focused_file["path"])
+    elif focused_file == "":
         return
-    new_image = Image.open(focused_file["path"])
     negated_image = ''
 
     if new_image.mode == 'L':
@@ -299,6 +319,8 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
         negated_image = Image.new(new_image.mode, new_image.size)
         negated_image.putdata(negated_pixel_rgb_list)  # type: ignore
 
+    new_image = negated_image
+
     negated_image = ImageTk.PhotoImage(negated_image)
 
     new_window = tk.Toplevel(
@@ -308,6 +330,8 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=negated_image)
     image.image = negated_image  # type: ignore
+
+    add_event_listeners(new_window, new_image)
     image.pack()
 
 
@@ -320,9 +344,14 @@ def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) ->
     except:
         return
 
-    if focused_file == "":
+    if focused_file["image"]:
+        new_image = focused_file["image"]
+    elif focused_file["path"]:
+
+        new_image = Image.open(focused_file["path"])
+    elif focused_file == "":
         return
-    new_image = Image.open(focused_file["path"])
+
     processed_image = ''
 
     if new_image.mode != 'L':
@@ -350,6 +379,7 @@ def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) ->
 
     processed_image = Image.new(new_image.mode, new_image.size)
     processed_image.putdata(processed_pixel_list)
+    new_image = processed_image
     processed_image = ImageTk.PhotoImage(processed_image)
 
     new_window = tk.Toplevel(
@@ -358,6 +388,7 @@ def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) ->
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=processed_image)
     image.image = processed_image  # type: ignore
+    add_event_listeners(new_window, new_image)
     image.pack()
 
 
@@ -368,9 +399,14 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
     except:
         return
 
-    if focused_file == "":
+    if focused_file["image"]:
+        new_image = focused_file["image"]
+    elif focused_file["path"]:
+
+        new_image = Image.open(focused_file["path"])
+    elif focused_file == "":
         return
-    new_image = Image.open(focused_file["path"])
+
     processed_image = ''
 
     goal_table: List[int] = []
@@ -388,14 +424,13 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
                          goal_table[pixel[1]],
                          goal_table[pixel[2]]
                          )
-            print(new_pixel)
             negated_pixel_rgb_list.append(new_pixel)
 
         negated_image = Image.new(new_image.mode, new_image.size)
         negated_image.putdata(negated_pixel_rgb_list)  # type: ignore
 
+        new_image = negated_image
         negated_image = ImageTk.PhotoImage(negated_image)
-
     new_window = tk.Toplevel(
         root, width=new_image.width, height=new_image.height)
     # new_window.iconphoto(False, icon)
@@ -403,6 +438,8 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=negated_image)
     image.image = negated_image  # type: ignore
+    add_event_listeners(new_window, new_image)
+
     image.pack()
 
     return
@@ -423,9 +460,13 @@ def generate_lut(pixel_list: List[int]):
 
 def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
     window_to_close.destroy()
-    if focused_file == "":
+    if focused_file["image"]:
+        new_image = focused_file["image"]
+    elif focused_file["path"]:
+
+        new_image = Image.open(focused_file["path"])
+    elif focused_file == "":
         return
-    new_image = Image.open(focused_file["path"])
     processed_image = ''
 
     if new_image.mode != 'L':
@@ -471,6 +512,7 @@ def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
     print(max(processed_pixel_list), min(processed_pixel_list))
     processed_image = Image.new(new_image.mode, new_image.size)
     processed_image.putdata(processed_pixel_list)
+    new_image = processed_image
     processed_image = ImageTk.PhotoImage(processed_image)
 
     new_window = tk.Toplevel(
@@ -479,6 +521,7 @@ def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=processed_image)
     image.image = processed_image  # type: ignore
+    add_event_listeners(new_window, new_image)
     image.pack()
 
 
@@ -551,7 +594,7 @@ def show_process_menu():
     negation_button.grid(column=1, row=1, padx=5, pady=5)
     treshhold_button.grid(column=1, row=2, padx=5, pady=5)
     posterize_button.grid(column=1, row=3, padx=5, pady=5)
-    stretch_button.grid(column=1, row=3, padx=5, pady=5)
+    stretch_button.grid(column=1, row=4, padx=5, pady=5)
 
 
 def show_threshold_menu(window_to_destroy):
