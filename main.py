@@ -65,11 +65,12 @@ def import_image(root_window: tk.Toplevel):
         """
         Switches the focused_file data to the current image in order for other functions to operate on them. Resets the plot profile data since it's another image.
         """
-        global focused_file, plot_profile_data
+        global focused_file, plot_profile_data, save_button
         focused_file["path"] = file_path
         focused_file["mode"] = opened_image.mode
         focused_file["image"] = opened_image
         # reset plot profile data for new image
+        save_button["state"] = "normal"
         try:
             plot_profile_data["start"] = [-1, -1]
             plot_profile_data["end"] = [-1, -1]
@@ -525,6 +526,11 @@ def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
     image.pack()
 
 
+def save_image(window_to_close: tk.Toplevel, new_file_name: str) -> None:
+    window_to_close.destroy()
+    focused_file["image"].save(new_file_name)
+
+
 # define main menu
 root = tk.Tk()
 # root.geometry("220x50")
@@ -534,11 +540,14 @@ root.title("RasterLab")
 root.resizable(False, False)
 root.protocol("WM_DELETE_WINDOW", terminate_all)
 
+save_button = ''
+
 
 def show_file_menu():
     """
     Render FILE menu with buttons to import and save an image.
     """
+    global save_button
     new_window = tk.Toplevel(root)
     new_window.title(f"FILE")
     new_window.resizable(False, False)
@@ -546,10 +555,26 @@ def show_file_menu():
     import_button = create_button(
         new_window, "import image", lambda: import_image(new_window))
     save_button = create_button(
-        new_window, "save image", lambda: print('save'))
+        new_window, "save image", lambda: save_image_menu(new_window))
     import_button.grid(column=1, row=1, padx=5, pady=5)
     save_button.grid(column=2, row=1, padx=5, pady=5)
     save_button["state"] = "disabled"
+
+
+def save_image_menu(window_to_destroy: tk.Toplevel):
+    window_to_destroy.destroy()
+
+    new_window = tk.Toplevel(root)
+    new_window.title(f"SAVE FILE")
+    new_window.resizable(False, False)
+    tk.Label(new_window, text="Name: ", font=("Arial", 12)).grid(
+        column=1, row=1, padx=10, pady=10)
+    e1 = tk.Entry(new_window, font=("Arial", 12))
+    e1.grid(
+        column=2, row=1, padx=10, pady=10)
+
+    create_button(
+        new_window, "save", lambda: save_image(new_window, e1.get())).grid(column=2, row=2, padx=5, pady=5)
 
 
 def show_analyze_menu():
