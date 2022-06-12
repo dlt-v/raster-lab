@@ -72,7 +72,6 @@ def import_image(root_window: tk.Toplevel):
         focused_file["mode"] = opened_image.mode
         focused_file["image"] = opened_image
         # reset plot profile data for new image
-        save_button["state"] = "normal"
         try:
             plot_profile_data["start"] = [-1, -1]
             plot_profile_data["end"] = [-1, -1]
@@ -560,7 +559,6 @@ def show_file_menu():
         new_window, "save image", lambda: save_image_menu(new_window))
     import_button.grid(column=1, row=1, padx=5, pady=5)
     save_button.grid(column=2, row=1, padx=5, pady=5)
-    save_button["state"] = "disabled"
 
 
 def save_image_menu(window_to_destroy: tk.Toplevel):
