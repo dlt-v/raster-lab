@@ -1159,16 +1159,245 @@ def show_two_point_menu():
     button7.grid(column=6, row=1, padx=5, pady=5)
 
 
+def morph_image(window_to_close, o1, o2, o3, o4):
+    window_to_close.destroy()
+    o1, o2, o3, o4 = int(o1), int(o2), int(o3), int(o4)
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'])
+    title: str = ""
+    # edge mode
+    match o3:
+        case 1:  # constant
+            edge_mode = cv.BORDER_CONSTANT
+        case 2:  # replicate
+            edge_mode = cv.BORDER_REPLICATE
+        case 3:  # reflect
+            edge_mode = cv.BORDER_REFLECT
+        case 4:  # reflect101
+            edge_mode = cv.BORDER_REFLECT101
+        case 5:  # wrap
+            edge_mode = cv.BORDER_WRAP
+    # generate kernel
+    match o2:
+        case 1:  # rombus
+            # kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
+            r = o4
+            kernel = np.uint8(np.add.outer(*[np.r_[:r, r: -1: -1]]*2) >= r)
+        case 2:  # square
+            kernel = cv.getStructuringElement(cv.MORPH_RECT, (o4, o4))
+    # morph option
+    match o1:
+        case 1:  # Erode
+            result = cv.erode(
+                img,
+                kernel,
+                iterations=2,
+                borderType=edge_mode
+            )
+            title = 'erosion'
+        case 2:  # Dilate
+            result = cv.dilate(
+                img,
+                kernel,
+                iterations=2,
+                borderType=edge_mode
+            )
+            title = 'dilution'
+        case 3:  # Open
+            result = cv.morphologyEx(
+                img,
+                cv.MORPH_OPEN,
+                kernel,
+                iterations=2,
+                borderType=edge_mode
+            )
+            title = 'open'
+        case 4:  # Close
+            result = cv.morphologyEx(
+                img,
+                cv.MORPH_CLOSE,
+                kernel,
+                iterations=2,
+                borderType=edge_mode
+            )
+            title = 'close'
+
+    plt.imshow(result), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_morph_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"Morph")
+    new_window.resizable(False, False)
+    option1 = tk.IntVar()
+    check1 = tk.Checkbutton(
+        new_window,
+        text='Erosion',
+        variable=option1,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check2 = tk.Checkbutton(
+        new_window,
+        text='Dilution',
+        variable=option1,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check3 = tk.Checkbutton(
+        new_window,
+        text='Open',
+        variable=option1,
+        onvalue=3,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check4 = tk.Checkbutton(
+        new_window,
+        text='Close',
+        variable=option1,
+        onvalue=4,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check1.grid(column=1, row=1, padx=5, pady=5)
+    check2.grid(column=1, row=2, padx=5, pady=5)
+    check3.grid(column=1, row=3, padx=5, pady=5)
+    check4.grid(column=1, row=4, padx=5, pady=5)
+    option2 = tk.IntVar()
+    check5 = tk.Checkbutton(
+        new_window,
+        text='Rombus',
+        variable=option2,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check6 = tk.Checkbutton(
+        new_window,
+        text='Square',
+        variable=option2,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check5.grid(column=2, row=1, padx=5, pady=5)
+    check6.grid(column=2, row=2, padx=5, pady=5)
+
+    option3 = tk.IntVar()
+
+    border1 = tk.Checkbutton(
+        new_window,
+        text='constant',
+        variable=option3,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border2 = tk.Checkbutton(
+        new_window,
+        text='replicate',
+        variable=option3,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border3 = tk.Checkbutton(
+        new_window,
+        text='reflect',
+        variable=option3,
+        onvalue=3,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border4 = tk.Checkbutton(
+        new_window,
+        text='reflect_101',
+        variable=option3,
+        onvalue=4,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border5 = tk.Checkbutton(
+        new_window,
+        text='wrap',
+        variable=option3,
+        onvalue=5,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border1.grid(column=3, row=1, padx=5, pady=5)
+    border2.grid(column=3, row=2, padx=5, pady=5)
+    border3.grid(column=3, row=3, padx=5, pady=5)
+    border4.grid(column=3, row=4, padx=5, pady=5)
+    border5.grid(column=3, row=5, padx=5, pady=5)
+
+    option4 = tk.IntVar()
+    kernel_size1 = tk.Checkbutton(
+        new_window,
+        text='3x3',
+        variable=option4,
+        onvalue=3,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    kernel_size2 = tk.Checkbutton(
+        new_window,
+        text='5x5',
+        variable=option4,
+        onvalue=5,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    kernel_size1.grid(column=4, row=1, padx=5, pady=5)
+    kernel_size2.grid(column=4, row=2, padx=5, pady=5)
+
+    submit_button = create_button(
+        new_window,
+        "submit",
+        lambda: morph_image(
+            new_window,
+            option1.get(),
+            option2.get(),
+            option3.get(),
+            option4.get()
+        )
+    )
+    submit_button.grid(column=5, row=1, padx=5, pady=5)
+
+
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
 filter_button = create_button(root, "FILTER", show_filter_menu)
 two_point_button = create_button(root, "TWO POINT", show_two_point_menu)
+morph_button = create_button(root, "MORPH", show_morph_menu)
+mask_filter_button = create_button(root, "MASK FILTER", show_morph_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
 filter_button.grid(column=4, row=1, padx=5, pady=5)
 two_point_button.grid(column=5, row=1, padx=5, pady=5)
+morph_button.grid(column=6, row=1, padx=5, pady=5)
+mask_filter_button.grid(column=7, row=1, padx=5, pady=5)
 
 
 root.mainloop()
