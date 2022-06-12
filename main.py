@@ -1,5 +1,4 @@
-from ast import Pass
-from email.policy import default
+
 import tkinter as tk
 from tkinter import filedialog
 from typing import Any, Dict, List, Tuple
@@ -27,6 +26,11 @@ focused_file: Dict[str, Any] = {
     "mode": "",
     "image": ""
 }
+previous_file: Dict[str, Any] = {
+    "path": "",
+    "mode": "",
+    "image": ""
+}
 plot_profile_data: Dict[str, List[int]] = {
     "start": [-1, -1],
     "end": [-1, -1]
@@ -36,7 +40,8 @@ plot_profile_data: Dict[str, List[int]] = {
 def add_event_listeners(window, image):
 
     def on_focus(event):
-        global focused_file, plot_profile_data
+        global focused_file, previous_file, plot_profile_data
+        previous_file = focused_file
         focused_file["path"] = ''
         focused_file["mode"] = image.mode
         focused_file["image"] = image
@@ -67,10 +72,15 @@ def import_image(root_window: tk.Toplevel):
         """
         Switches the focused_file data to the current image in order for other functions to operate on them. Resets the plot profile data since it's another image.
         """
-        global focused_file, plot_profile_data, save_button
+        global focused_file, previous_file, plot_profile_data, save_button
+        previous_file["path"] = focused_file["path"]
+        previous_file["mode"] = focused_file["mode"]
+        previous_file["image"] = focused_file["image"]
         focused_file["path"] = file_path
         focused_file["mode"] = opened_image.mode
         focused_file["image"] = opened_image
+        print(f"Focused image: {focused_file['path']}")
+        print(f"Previous image: {previous_file['path']}")
         # reset plot profile data for new image
         try:
             plot_profile_data["start"] = [-1, -1]
@@ -86,7 +96,7 @@ def import_image(root_window: tk.Toplevel):
                 histogram_array_button["state"] = "disabled"
             histogram_button["state"] = "normal"
         except:
-            print("Couldn't change state of some buttons.")
+            pass
 
     def on_scroll(event):
         """
@@ -1055,14 +1065,110 @@ def show_filter_menu():
         button3.grid(column=1, row=4, padx=5, pady=5)
 
 
+def two_point_operation(window_to_close, option: int, blend_a: float = 1, blend_b: float = 1):
+    window_to_close.destroy()
+    if not focused_file['path'] and not previous_file['path']:
+        return
+    if blend_b:
+        blend_a = float(blend_a)
+        blend_b = float(blend_b)
+    img1 = cv.imread(focused_file['path'])
+    img2 = cv.imread(previous_file['path'])
+
+    match option:
+        case 0:  # add
+            result_image = cv.add(img1, img2)
+            title = 'addition'
+        case 1:  # subtract
+            result_image = cv.subtract(img1, img2)
+            title = 'subtraction'
+        case 2:  # blend
+            title = 'blend'
+            result_image = cv.addWeighted(img1, blend_a, img2, blend_b, 0)
+        case 3:  # and
+            title = 'and'
+            result_image = cv.bitwise_and(img1, img2)
+        case 4:  # or
+            title = 'or'
+            result_image = cv.bitwise_or(img1, img2)
+        case 5:  # not
+            title = 'not'
+            result_image = cv.bitwise_not(img1, img2)
+        case 6:  # xor
+            title = 'xor'
+            result_image = cv.bitwise_xor(img1, img2)
+
+    plt.imshow(result_image), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_two_point_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"Two Point")
+    new_window.resizable(False, False)
+    a = tk.Entry(new_window, font=("Arial", 12))
+    b = tk.Entry(new_window, font=("Arial", 12))
+    a.grid(
+        column=2, row=2, padx=5, pady=5)
+    b.grid(
+        column=3, row=2, padx=5, pady=5)
+
+    button1 = create_button(
+        new_window,
+        "ADD",
+        lambda: two_point_operation(new_window, 0)
+    )
+    button2 = create_button(
+        new_window,
+        "SUBTRACT",
+        lambda: two_point_operation(new_window, 1)
+    )
+    button3 = create_button(
+        new_window,
+        "BLEND",
+        lambda: two_point_operation(new_window, 2, a.get(), b.get())
+    )
+    button4 = create_button(
+        new_window,
+        "AND",
+        lambda: two_point_operation(new_window, 3)
+    )
+    button5 = create_button(
+        new_window,
+        "OR",
+        lambda: two_point_operation(new_window, 4)
+    )
+    button6 = create_button(
+        new_window,
+        "NOT",
+        lambda: two_point_operation(new_window, 5)
+    )
+    button7 = create_button(
+        new_window,
+        "XOR",
+        lambda: two_point_operation(new_window, 6)
+    )
+
+    button1.grid(column=1, row=1, padx=5, pady=5)
+    button2.grid(column=2, row=1, padx=5, pady=5)
+    button3.grid(column=1, row=2, padx=5, pady=5)
+    button4.grid(column=3, row=1, padx=5, pady=5)
+    button5.grid(column=4, row=1, padx=5, pady=5)
+    button6.grid(column=5, row=1, padx=5, pady=5)
+    button7.grid(column=6, row=1, padx=5, pady=5)
+
+
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
 filter_button = create_button(root, "FILTER", show_filter_menu)
+two_point_button = create_button(root, "TWO POINT", show_two_point_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
 filter_button.grid(column=4, row=1, padx=5, pady=5)
+two_point_button.grid(column=5, row=1, padx=5, pady=5)
 
 
 root.mainloop()
