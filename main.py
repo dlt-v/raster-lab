@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import scipy.ndimage
+from scipy.signal import convolve2d as conv2
 import cv2 as cv
 
 from create_button import create_button
@@ -1384,13 +1385,251 @@ def show_morph_menu():
     submit_button.grid(column=5, row=1, padx=5, pady=5)
 
 
+def mask_filter_image(window_to_close, o1, o2, o3):
+    window_to_close.destroy()
+    o1, o2, o3 = int(o1), int(o2), int(o3)
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'])
+    title: str = "mask_filter"
+    match o3:
+        case 1:  # constant
+            edge_mode = cv.BORDER_CONSTANT
+        case 2:  # replicate
+            edge_mode = cv.BORDER_REPLICATE
+        case 3:  # reflect
+            edge_mode = cv.BORDER_REFLECT
+        case 4:  # reflect101
+            edge_mode = cv.BORDER_REFLECT101
+        case 5:  # wrap
+            edge_mode = cv.BORDER_WRAP
+
+    smoothen_mask = np.ones((3, 3))
+    sharpen_mask = np.array([
+        [1, -2, 1],
+        [-2, 4, -2],
+        [1, -2, 1]
+    ])
+    conv_mask = conv2(smoothen_mask, sharpen_mask, mode='full')
+    match o2:
+        case 1:
+            chosen_mask = sharpen_mask
+        case 2:
+            chosen_mask = smoothen_mask
+
+    match o1:  # stages
+        case 1:  # one stage
+            result = cv.filter2D(
+                img,
+                cv.CV_64F,
+                chosen_mask,
+                borderType=edge_mode
+            )
+        case 2:  # two stage
+            result = cv.filter2D(
+                img,
+                cv.CV_64F,
+                smoothen_mask,
+                borderType=edge_mode
+            )
+            result = cv.filter2D(
+                result,
+                cv.CV_64F,
+                sharpen_mask,
+                borderType=edge_mode
+            )
+    plt.imshow(result), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_mask_filter_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"Morph")
+    new_window.resizable(False, False)
+    option1 = tk.IntVar()
+    check1 = tk.Checkbutton(
+        new_window,
+        text='1 stage',
+        variable=option1,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check2 = tk.Checkbutton(
+        new_window,
+        text='2 stage',
+        variable=option1,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check1.grid(column=1, row=1, padx=5, pady=5)
+    check2.grid(column=1, row=2, padx=5, pady=5)
+    option2 = tk.IntVar()
+    check5 = tk.Checkbutton(
+        new_window,
+        text='sharpen',
+        variable=option2,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check6 = tk.Checkbutton(
+        new_window,
+        text='smoothen',
+        variable=option2,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    check5.grid(column=2, row=1, padx=5, pady=5)
+    check6.grid(column=2, row=2, padx=5, pady=5)
+
+    option3 = tk.IntVar()
+
+    border1 = tk.Checkbutton(
+        new_window,
+        text='isolated',
+        variable=option3,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border2 = tk.Checkbutton(
+        new_window,
+        text='replicate',
+        variable=option3,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border3 = tk.Checkbutton(
+        new_window,
+        text='reflect',
+        variable=option3,
+        onvalue=3,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border1.grid(column=3, row=1, padx=5, pady=5)
+    border2.grid(column=3, row=2, padx=5, pady=5)
+    border3.grid(column=3, row=3, padx=5, pady=5)
+
+    submit_button = create_button(
+        new_window,
+        "submit",
+        lambda: mask_filter_image(
+            new_window,
+            option1.get(),
+            option2.get(),
+            option3.get(),
+        )
+    )
+    submit_button.grid(column=4, row=1, padx=5, pady=5)
+
+
+def skeletonize_image(to_destroy, o1):
+    to_destroy.destroy()
+    o1 = int(o1)
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'], 0)
+
+    title = "skeletonize"
+
+    def skeletonize(img):
+        """ OpenCV function to return a skeletonized version of img, a Mat object"""
+
+        #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+
+        img = img.copy()  # don't clobber original
+        skel = img.copy()
+
+        skel[:, :] = 0
+        kernel = cv.getStructuringElement(cv.MORPH_CROSS, (3, 3))
+
+        while True:
+            eroded = cv.morphologyEx(img, cv.MORPH_ERODE, kernel)
+            temp = cv.morphologyEx(eroded, cv.MORPH_DILATE, kernel)
+            temp = cv.subtract(img, temp)
+            skel = cv.bitwise_or(skel, temp)
+            img[:, :] = eroded[:, :]
+            if cv.countNonZero(img) == 0:
+                break
+
+        return skel
+
+    result = skeletonize(img)
+    plt.imshow(result), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_skeletonize_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"Skeletonize")
+    new_window.resizable(False, False)
+    option3 = tk.IntVar()
+
+    border1 = tk.Checkbutton(
+        new_window,
+        text='isolated',
+        variable=option3,
+        onvalue=1,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border2 = tk.Checkbutton(
+        new_window,
+        text='replicate',
+        variable=option3,
+        onvalue=2,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border3 = tk.Checkbutton(
+        new_window,
+        text='reflect',
+        variable=option3,
+        onvalue=3,
+        offvalue=0,
+        padx=5,
+        pady=5
+    )
+    border1.grid(column=1, row=1, padx=5, pady=5)
+    border2.grid(column=1, row=2, padx=5, pady=5)
+    border3.grid(column=1, row=3, padx=5, pady=5)
+
+    submit_button = create_button(
+        new_window,
+        "submit",
+        lambda: skeletonize_image(
+            new_window,
+            option3.get(),
+        )
+    )
+    submit_button.grid(column=2, row=1, padx=5, pady=5)
+
+
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
 filter_button = create_button(root, "FILTER", show_filter_menu)
 two_point_button = create_button(root, "TWO POINT", show_two_point_menu)
 morph_button = create_button(root, "MORPH", show_morph_menu)
-mask_filter_button = create_button(root, "MASK FILTER", show_morph_menu)
+mask_filter_button = create_button(root, "MASK FILTER", show_mask_filter_menu)
+skeletonize_button = create_button(
+    root, "SKELETONIZE", show_skeletonize_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
@@ -1398,6 +1637,7 @@ filter_button.grid(column=4, row=1, padx=5, pady=5)
 two_point_button.grid(column=5, row=1, padx=5, pady=5)
 morph_button.grid(column=6, row=1, padx=5, pady=5)
 mask_filter_button.grid(column=7, row=1, padx=5, pady=5)
+skeletonize_button.grid(column=8, row=1, padx=5, pady=5)
 
 
 root.mainloop()
