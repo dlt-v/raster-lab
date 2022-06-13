@@ -1621,6 +1621,114 @@ def show_skeletonize_menu():
     submit_button.grid(column=2, row=1, padx=5, pady=5)
 
 
+def thershold_image(to_destroy, o1=0, o2=0):
+
+    to_destroy.destroy()
+    try:
+        o1, o2 = int(o1), int(o2)
+    except:
+        o1 = int(o1)
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'], cv.IMREAD_GRAYSCALE)
+    match o1:
+        case 1:
+            title = "normal thersholding"
+            ret, result = cv.threshold(img, o2, 255, cv.THRESH_BINARY)
+        case 2:
+            title = "adaptive thersholding"
+
+            result = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C,
+                                          cv.THRESH_BINARY, 11, 2)
+        case 3:
+            title = "otsu thersholding"
+            blur = cv.GaussianBlur(img, (5, 5), 0)
+            ret3, result = cv.threshold(
+                blur, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
+        case 4:
+            img = cv.imread(focused_file['path'], cv.IMREAD_COLOR)
+            title = "watershedding"
+            img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+            ret2, thresh = cv.threshold(
+                img_gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+            kernel = np.ones((3, 3), np.uint8)
+            opening = cv.morphologyEx(
+                thresh, cv.MORPH_OPEN, kernel, iterations=1)
+            sure_bg = cv.dilate(opening, kernel, iterations=1)
+            dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
+
+            ret, sure_fg = cv.threshold(
+                dist_transform, 0.5*dist_transform.max(), 255, 0)
+            sure_fg = np.uint8(sure_fg)
+
+            unknown = cv.subtract(sure_bg, sure_fg)
+            ret, markers = cv.connectedComponents(sure_fg)
+
+            markers = markers+1
+            markers[unknown == 255] = 0
+
+            markers2 = cv.watershed(img, markers)
+
+            img_gray[markers2 == -1] = 255
+            img[markers2 == -1] = [255, 0, 0]
+            result = cv.applyColorMap(np.uint8(markers2*10), cv.COLORMAP_JET)
+
+    plt.imshow(result), plt.title(title)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def show_threshold_menu():
+    new_window = tk.Toplevel(root)
+    new_window.title(f"segmentation")
+    new_window.resizable(False, False)
+
+    a = tk.Entry(new_window, font=("Arial", 12), width=3)
+    a.grid(
+        column=2, row=1, padx=5, pady=5)
+
+    btn1 = create_button(
+        new_window,
+        "normal thresholding",
+        lambda: thershold_image(
+            new_window,
+            1,
+            a.get(),
+        )
+    )
+    btn2 = create_button(
+        new_window,
+        "adaptive thresholding",
+        lambda: thershold_image(
+            new_window,
+            2,
+            a.get(),
+        )
+    )
+    btn3 = create_button(
+        new_window,
+        "otsu thersholding",
+        lambda: thershold_image(
+            new_window,
+            3,
+            a.get(),
+        )
+    )
+    btn4 = create_button(
+        new_window,
+        "watershedding",
+        lambda: thershold_image(
+            new_window,
+            4,
+            a.get(),
+        )
+    )
+    btn1.grid(column=1, row=1, padx=5, pady=5)
+    btn2.grid(column=1, row=2, padx=5, pady=5)
+    btn3.grid(column=1, row=3, padx=5, pady=5)
+    btn4.grid(column=1, row=4, padx=5, pady=5)
+
+
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
@@ -1630,6 +1738,8 @@ morph_button = create_button(root, "MORPH", show_morph_menu)
 mask_filter_button = create_button(root, "MASK FILTER", show_mask_filter_menu)
 skeletonize_button = create_button(
     root, "SKELETONIZE", show_skeletonize_menu)
+threshold_button = create_button(
+    root, "SEGMENTATION", show_threshold_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
@@ -1638,6 +1748,7 @@ two_point_button.grid(column=5, row=1, padx=5, pady=5)
 morph_button.grid(column=6, row=1, padx=5, pady=5)
 mask_filter_button.grid(column=7, row=1, padx=5, pady=5)
 skeletonize_button.grid(column=8, row=1, padx=5, pady=5)
+threshold_button.grid(column=9, row=1, padx=5, pady=5)
 
 
 root.mainloop()
