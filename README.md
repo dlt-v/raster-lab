@@ -57,51 +57,62 @@ Pliki zapisywane są w folderze projektowym.
 Opcja ANALYZE oferuje kilka pod-opcji:
 ![image](https://user-images.githubusercontent.com/34798378/173597181-dcddf666-a518-47d1-9165-b673e04ae462.png)
 
--   hist plot - utworzenie graficznego przedstawienia histogramu obrazu.![image](https://user-images.githubusercontent.com/34798378/173597670-084c3670-6910-4f91-a936-adba8fb7d3ea.png)
+-   hist plot - utworzenie graficznego przedstawienia histogramu obrazu.
+-   ![image](https://user-images.githubusercontent.com/34798378/173597670-084c3670-6910-4f91-a936-adba8fb7d3ea.png)
 
--   hist array - utworzenie histogramu obrazu w postacji tekstowej.![image](https://user-images.githubusercontent.com/34798378/173597752-4f4c5ae6-32bf-433d-8ec9-6f563dd1c783.png)
+-   hist array - utworzenie histogramu obrazu w postacji tekstowej.
+-   ![image](https://user-images.githubusercontent.com/34798378/173597752-4f4c5ae6-32bf-433d-8ec9-6f563dd1c783.png)
 
--   plot profile - utworzenie linii profilu - by ta opcja zadziałała obraz musi byc kliknięty w dwóch punktach po kolei i będą to punkty to analizy.![image](https://user-images.githubusercontent.com/34798378/173597803-16d5fc04-5b79-41c8-acdc-8dd5706079ac.png)
+-   plot profile - utworzenie linii profilu - by ta opcja zadziałała obraz musi byc kliknięty w dwóch punktach po kolei i będą to punkty to analizy.
+-   ![image](https://user-images.githubusercontent.com/34798378/173597803-16d5fc04-5b79-41c8-acdc-8dd5706079ac.png)
 
--   find objects - uruchamienie algorytmu detekcji obiektów w obrazie razem z ich właściwościami.![image](https://user-images.githubusercontent.com/34798378/173597911-d23fb7c6-c57a-4b73-8d40-35f057e8d663.png)
+-   find objects - uruchamienie algorytmu detekcji obiektów w obrazie razem z ich właściwościami.
+-   ![image](https://user-images.githubusercontent.com/34798378/173597911-d23fb7c6-c57a-4b73-8d40-35f057e8d663.png)
 
 
 #### PROCESS - przetworzenie obrazu
 ![image](https://user-images.githubusercontent.com/34798378/173597245-6e513458-764d-451f-8156-e452443336dd.png)
 
--   negation - tworzenie negatywu obrazu![image](https://user-images.githubusercontent.com/34798378/173598019-71518084-5036-4b0a-a40d-fe5818f450c7.png)
+-   negation - tworzenie negatywu obrazu
+![image](https://user-images.githubusercontent.com/34798378/173598019-71518084-5036-4b0a-a40d-fe5818f450c7.png)
 
 -   threshold - progowanie z dwoma opcjami
-    -   bins - ilość progów![image](https://user-images.githubusercontent.com/34798378/173598185-f91c7d54-977c-4869-861d-022d8dc6ba01.png)
+    -   bins - ilość progów
+    ![image](https://user-images.githubusercontent.com/34798378/173598185-f91c7d54-977c-4869-861d-022d8dc6ba01.png)
 
-    -   simple - wartość działu![image](https://user-images.githubusercontent.com/34798378/173598232-aac261ca-d54a-444c-af95-7a9f03c60089.png)
+    -   simple - wartość działu
+    ![image](https://user-images.githubusercontent.com/34798378/173598232-aac261ca-d54a-444c-af95-7a9f03c60089.png)
 
--   posterize - posteryzacja z ilością progów![image](https://user-images.githubusercontent.com/34798378/173598294-348ba994-0834-4375-8dcf-1e1f2c7d299c.png)
+-   posterize - posteryzacja z ilością progów
+![image](https://user-images.githubusercontent.com/34798378/173598294-348ba994-0834-4375-8dcf-1e1f2c7d299c.png)
 
--   stretch - rozciąganie zakresu; z zakresu p1-p2 do zakresu q3-q4, w szczególności gdy q3=0, q4=Lmax. Wartości mogą zostać puste wtedy zostaną wypełnione wartościami automatycznie.![image](https://user-images.githubusercontent.com/34798378/173598444-1370bd5d-b81b-4440-bdf7-f4c7d5796233.png)
+-   stretch - rozciąganie zakresu; z zakresu p1-p2 do zakresu q3-q4, w szczególności gdy q3=0, q4=Lmax. Wartości mogą zostać puste wtedy zostaną wypełnione wartościami automatycznie.
+![image](https://user-images.githubusercontent.com/34798378/173598444-1370bd5d-b81b-4440-bdf7-f4c7d5796233.png)
 
 
 #### FILTER - zastosowanie filtrów na wybranym obrazie
 ![image](https://user-images.githubusercontent.com/34798378/173597269-2de49036-3ea8-4efd-bc85-d7f9e50127ca.png)
 
--   blur - opcja wygładzania![image](https://user-images.githubusercontent.com/34798378/173598590-5a257e08-08cb-4fd2-a336-a1cd2a0308dc.png)
-
+-   blur - opcja wygładzania
+![image](https://user-images.githubusercontent.com/34798378/173598590-5a257e08-08cb-4fd2-a336-a1cd2a0308dc.png)
     -   blur - prostego
     -   gaussian - gaussowskiego
--   detect_edge - detekcji krawędzi różnymi metodami (potrzebne argumenty są podane na przyciskach)![image](https://user-images.githubusercontent.com/34798378/173598686-eac982b0-4699-483b-bdf9-bb8839d3bbda.png)
-
+-   detect_edge - detekcji krawędzi różnymi metodami (potrzebne argumenty są podane na przyciskach)
+![image](https://user-images.githubusercontent.com/34798378/173598686-eac982b0-4699-483b-bdf9-bb8839d3bbda.png)
     -   sobel
     -   laplacian
     -   canny
     -   prewitt
--   sharpen - wyostrzania oparta na 3 maskach laplasjanowych![image](https://user-images.githubusercontent.com/34798378/173598816-5395ba0a-5cba-4296-b5e2-eebaa0ad01dc.png)
-
+-   sharpen - wyostrzania oparta na 3 maskach laplasjanowych
+![image](https://user-images.githubusercontent.com/34798378/173598816-5395ba0a-5cba-4296-b5e2-eebaa0ad01dc.png)
     -   A
     -   B
     -   C
--   custom_kernel - opcja wpisania własnego kernela 3x3![image](https://user-images.githubusercontent.com/34798378/173598951-f03a8999-09d1-4caa-a99d-3e34b30be8a1.png)
+-   custom_kernel - opcja wpisania własnego kernela 3x3!
+[image](https://user-images.githubusercontent.com/34798378/173598951-f03a8999-09d1-4caa-a99d-3e34b30be8a1.png)
 
--   median_filter - filtracja medianowa z opcjami wielkości kernela![image](https://user-images.githubusercontent.com/34798378/173599087-8aed790a-2bda-42e8-93f4-0a7456bbedc4.png)
+-   median_filter - filtracja medianowa z opcjami wielkości kernela
+![image](https://user-images.githubusercontent.com/34798378/173599087-8aed790a-2bda-42e8-93f4-0a7456bbedc4.png)
 
 
 #### TWO POINT - operacje na dwóch obrazach
@@ -109,8 +120,9 @@ Opcja ANALYZE oferuje kilka pod-opcji:
 
 Ta opcja umożliwia operacje na dwóch obrazach. Trzeba pamiętać, że obrazy muszą zostać kliknięte w wybranej przez siebie kolejności by opcja działała poprawnie.
 
--   add - odejmowanie![image](https://user-images.githubusercontent.com/34798378/173599353-1399c1bc-aeed-42b1-b4da-0905b674319f.png)
+-   add - odejmowanie
 
+![image](https://user-images.githubusercontent.com/34798378/173599353-1399c1bc-aeed-42b1-b4da-0905b674319f.png)
 -   subtract - odejmowanie
 -   blend - mieszanie z dwoma wartościami
 -   operacje logiczne bitowe AND, OR, NOT, XOR
@@ -120,7 +132,8 @@ Ta opcja umożliwia operacje na dwóch obrazach. Trzeba pamiętać, że obrazy m
 
 Na początku wybieramy operację, którą chcemy wykonać
 
--   erosion - erozja![image](https://user-images.githubusercontent.com/34798378/173599458-6f9f26d4-ac3b-4a53-a104-c4913e62e87e.png)
+-   erosion - erozja
+-   ![image](https://user-images.githubusercontent.com/34798378/173599458-6f9f26d4-ac3b-4a53-a104-c4913e62e87e.png)
 
 -   dilution - dylacja
 -   open - otwórz
@@ -131,7 +144,8 @@ Później wybieramy który kernel chcemy i na koniec wybieramy metodę paddingu 
 #### MASK FILTER - filtry jedno i dwu etapowe
 ![image](https://user-images.githubusercontent.com/34798378/173597391-4663ef6f-537b-47e7-9d40-4bd088c7b3ad.png)
 
-Mamy możliwość wybrania między jedno i dwu-stopniowym filtrowaniem.![image](https://user-images.githubusercontent.com/34798378/173599648-ee2f57a5-24b5-40e0-abd0-5674d17fa16a.png)
+Mamy możliwość wybrania między jedno i dwu-stopniowym filtrowaniem.
+![image](https://user-images.githubusercontent.com/34798378/173599648-ee2f57a5-24b5-40e0-abd0-5674d17fa16a.png)
 
 W przypadku jednostopniowego filtrowania mamy możliwość wyboru kernela, wyostrz bądź zmiękcz i opcję paddingu krawędzi obrazu.
 
