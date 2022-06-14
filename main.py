@@ -9,6 +9,7 @@ import numpy as np
 import scipy.ndimage
 from scipy.signal import convolve2d as conv2
 import cv2 as cv
+import random
 
 from create_button import create_button
 
@@ -200,7 +201,7 @@ def generate_histogram_table(data: Dict[str, int]) -> None:
     # sheet = tksheet.Sheet(new_window)
     # sheet.grid()
     # sheet.set_sheet_data([f"{cj}" for cj in sorted_data.values()])
-    t = tk.Text(new_window, height=256, width=10)
+    t = tk.Text(new_window, height=256, width=20)
     for i in sorted_data.keys():
         t.insert(tk.END, f"{i}: {sorted_data[i]}\n")
     t.pack()
@@ -588,6 +589,80 @@ def save_image_menu(window_to_destroy: tk.Toplevel):
         new_window, "save", lambda: save_image(new_window, e1.get())).grid(column=2, row=2, padx=5, pady=5)
 
 
+def find_and_show_contours(fname):
+    img = cv.imread(fname, cv.IMREAD_GRAYSCALE)
+    ret, thresh = cv.threshold(img, 127, 255, 0)
+    contours, hierarchy = cv.findContours(
+        thresh, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+    # mode: cv2.RETR_EXTERNAL / cv2.RETR_FLOODFILL
+    # approximation: cv2.CHAIN_APPROX_NONE / cv2.CHAIN_APPROX_SIMPLE
+    img3 = cv.cvtColor(thresh, cv.COLOR_GRAY2RGB)
+    for cnt in contours:
+        cv.drawContours(img3, [cnt], 0, (random.randrange(
+            50, 200, 25), random.randrange(50, 200, 25), random.randrange(50, 200, 25)), 3)
+    # cv2_imshow(img3)
+    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+    im_pil = Image.fromarray(img3)
+
+    new_img = ImageTk.PhotoImage(im_pil)
+
+    new_window = tk.Toplevel(
+        root, width=im_pil.width, height=im_pil.height)
+    # new_window.iconphoto(False, icon)
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=new_img)
+    # it has to be a reference, otherwise the image doesn't load!
+    image.image = new_img  # type: ignore
+    image.pack()
+
+
+def find_objects(window_to_destroy: tk.Toplevel):
+    window_to_destroy.destroy()
+    if not focused_file['path']:
+        return
+    img = cv.imread(focused_file['path'], cv.IMREAD_GRAYSCALE)
+    find_and_show_contours(focused_file['path'])
+    title: str = ""
+    ret, thresh = cv.threshold(img, 127, 255, 0)
+    # funkcja znajdywania kontórow w obrazie binarnym
+    contours, hierarchy = cv.findContours(
+        thresh, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+
+    sorted_data = cv.moments(img)
+    new_window = tk.Toplevel(root)
+    # new_window.iconphoto(False, icon)
+    new_window.resizable(False, False)
+    # sheet = tksheet.Sheet(new_window)
+    # sheet.grid()
+    # sheet.set_sheet_data([f"{cj}" for cj in sorted_data.values()])
+    t = tk.Text(new_window, height=30, width=40)
+    cnt = contours[0]
+    t.insert(tk.END, f"Found {len(contours)} elements.\n")
+    t.insert(tk.END, f"Area: {cv.contourArea(cnt)}.\n")
+    t.insert(tk.END, f"Perimiter: {cv.arcLength(cnt,True)}.\n")
+    x, y, w, h = cv.boundingRect(cnt)
+    aspect_ratio = float(w)/h
+
+    t.insert(tk.END, f"aspect ratio: {aspect_ratio}.\n")
+    area = cv.contourArea(cnt)
+    x, y, w, h = cv.boundingRect(cnt)
+    rect_area = w*h
+    extent = float(area)/rect_area
+    t.insert(tk.END, f"extent: {extent}.\n")
+    area = cv.contourArea(cnt)
+    hull = cv.convexHull(cnt)
+    hull_area = cv.contourArea(hull)
+    solidity = float(area)/hull_area
+    t.insert(tk.END, f"solidity: {solidity}.\n")
+    area = cv.contourArea(cnt)
+    equi_diameter = np.sqrt(4*area/np.pi)
+    t.insert(tk.END, f"equivalentDiameter: {equi_diameter}.\n")
+
+    for i in sorted_data.keys():
+        t.insert(tk.END, f"{i}: {sorted_data[i]}\n")
+    t.pack()
+
+
 def show_analyze_menu():
     """
     Render ANALYZE menu with buttons for plotting profile and creating histograms.
@@ -607,6 +682,12 @@ def show_analyze_menu():
     histogram_button.grid(column=2, row=1, padx=5, pady=5)
     histogram_array_button.grid(column=3, row=1, padx=5, pady=5)
     plot_profile_button.grid(column=4, row=1, padx=5, pady=5)
+    find_objects_button = create_button(
+        new_window,
+        "find objects",
+        lambda: find_objects(new_window)
+    )
+    find_objects_button.grid(column=5, row=1, padx=5, pady=5)
 
     # disable buttons at the start since there's no data to operate on
     histogram_array_button["state"] = "disabled"
