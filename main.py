@@ -1759,7 +1759,7 @@ def thershold_image(to_destroy, o1=0, o2=0):
     plt.show()
 
 
-def show_threshold_menu():
+def show_segmentation_menu():
     new_window = tk.Toplevel(root)
     new_window.title(f"segmentation")
     new_window.resizable(False, False)
@@ -1820,7 +1820,7 @@ mask_filter_button = create_button(root, "MASK FILTER", show_mask_filter_menu)
 skeletonize_button = create_button(
     root, "SKELETONIZE", show_skeletonize_menu)
 threshold_button = create_button(
-    root, "SEGMENTATION", show_threshold_menu)
+    root, "SEGMENTATION", show_segmentation_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
