@@ -219,7 +219,7 @@ def compose_histogram(mode: str):
     elif focused_file == "":
         return
     pixel_list = list(new_image.getdata())
-    match (new_image.mode):
+    match new_image.mode:
         # L for greyscale images, RGB for color images (duh)
         case 'L':
             color_values = {}
@@ -905,6 +905,17 @@ def filter_image(filter_option: int, edge_option: int, a=0, b=0, c=0) -> None:
     plt.imshow(blur), plt.title(title)
     plt.xticks([]), plt.yticks([])
     plt.show()
+    im_pil = Image.fromarray(blur)
+
+    new_img = ImageTk.PhotoImage(im_pil)
+    new_window = tk.Toplevel(
+        root, width=im_pil.width, height=im_pil.height)
+    # new_window.iconphoto(False, icon)
+    new_window.resizable(False, False)
+    image = tk.Label(new_window, image=new_img)
+    # it has to be a reference, otherwise the image doesn't load!
+    image.image = new_img  # type: ignore
+    image.pack()
 
 
 def show_filter_menu():
@@ -1070,9 +1081,10 @@ def show_filter_menu():
         new_window = tk.Toplevel(root)
         new_window.title(f"Edge detection")
         new_window.resizable(False, False)
-        a = tk.Entry(new_window, font=("Arial", 12))
-        b = tk.Entry(new_window, font=("Arial", 12))
-        c = tk.Entry(new_window, font=("Arial", 12))
+        # new_window.geometry("200x200")
+        a = tk.Entry(new_window, font=("Arial", 12), width=3)
+        b = tk.Entry(new_window, font=("Arial", 12), width=3)
+        c = tk.Entry(new_window, font=("Arial", 12), width=3)
         a.grid(
             column=1, row=1, padx=10, pady=10)
         b.grid(
@@ -1080,9 +1092,9 @@ def show_filter_menu():
         c.grid(
             column=3, row=1, padx=10, pady=10)
 
-        d = tk.Entry(new_window, font=("Arial", 12))
-        e = tk.Entry(new_window, font=("Arial", 12))
-        f = tk.Entry(new_window, font=("Arial", 12))
+        d = tk.Entry(new_window, font=("Arial", 12), width=3)
+        e = tk.Entry(new_window, font=("Arial", 12), width=3)
+        f = tk.Entry(new_window, font=("Arial", 12), width=3)
         d.grid(
             column=1, row=2, padx=10, pady=10)
         e.grid(
@@ -1090,9 +1102,9 @@ def show_filter_menu():
         f.grid(
             column=3, row=2, padx=10, pady=10)
 
-        g = tk.Entry(new_window, font=("Arial", 12))
-        h = tk.Entry(new_window, font=("Arial", 12))
-        i = tk.Entry(new_window, font=("Arial", 12))
+        g = tk.Entry(new_window, font=("Arial", 12), width=3)
+        h = tk.Entry(new_window, font=("Arial", 12), width=3)
+        i = tk.Entry(new_window, font=("Arial", 12), width=3)
         g.grid(
             column=1, row=3, padx=10, pady=10)
         h.grid(
@@ -1118,7 +1130,7 @@ def show_filter_menu():
             lambda: submit_kernel()
         )
 
-        button1.grid(column=1, row=4, padx=5, pady=5)
+        button1.grid(column=4, row=1, padx=5, pady=5)
 
     def show_median_submenu(to_destroy):
         to_destroy.destroy()
