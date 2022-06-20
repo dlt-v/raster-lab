@@ -10,6 +10,7 @@ import scipy.ndimage
 from scipy.signal import convolve2d as conv2
 import cv2 as cv
 import random
+import imutils
 
 from create_button import create_button
 
@@ -21,6 +22,29 @@ def terminate_all():
     plt.close('all')
     root.destroy()
 
+
+class RasterImage:
+    '''
+    Holds information about imported image.
+    '''
+
+    def __init__(self, path) -> None:
+        self.path = path
+        self.object = Image.open(self.path)
+        self.tk_object = ImageTk.PhotoImage(self.object)
+
+    def get_mode(self) -> str:
+        '''
+        Returns the color mode of the image.
+
+        "L" - greyscale
+
+        "RGB" | "RGBa" - color | color transparent
+        '''
+        return self.object.mode()
+
+
+opened_images_list: List[RasterImage] = []
 
 mpl.rcParams['toolbar'] = 'None'
 focused_file: Dict[str, Any] = {
@@ -65,7 +89,8 @@ def import_image(root_window: tk.Toplevel):
 
     opened_image = Image.open(file_path)
     new_img = ImageTk.PhotoImage(opened_image)
-
+    raster_image = RasterImage(file_path)
+    opened_images_list.insert(0, raster_image)
     new_window = tk.Toplevel(
         root, width=opened_image.width, height=opened_image.height)
     # new_window.iconphoto(False, icon)
@@ -557,7 +582,7 @@ def save_image(window_to_close: tk.Toplevel, new_file_name: str) -> None:
     Save image to disk.
     '''
     window_to_close.destroy()
-    focused_file["image"].save(new_file_name)
+    focused_file["image"].save(f"output\{new_file_name}")
 
 
 # define main menu
@@ -1882,6 +1907,128 @@ def show_segmentation_menu():
     btn4.grid(column=1, row=4, padx=5, pady=5)
 
 
+def render_pil_image(image, title: str) -> Image.Image:
+    '''Convert openCV image into PIL image, return and display it.'''
+    image_array = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    new_image = Image.fromarray(image_array)
+    tk_image = ImageTk.PhotoImage(new_image)
+
+    new_window = tk.Toplevel(
+        root,
+        width=new_image.width,
+        height=new_image.height
+    )
+    new_window.title(title)
+    new_window.resizable(False, False)
+
+    image = tk.Label(new_window, image=tk_image)
+    image.image = tk_image  # type: ignore
+    add_event_listeners(new_window, new_image)
+    image.pack()
+    return new_image
+
+
+def stitch(to_destroy: tk.Toplevel, raw: bool):
+    '''Stitch all opened images.'''
+
+    to_destroy.destroy()
+    images = []
+
+    for image_object in opened_images_list:
+        img = cv.imread(image_object.path)
+        images.append(img)
+
+    stitcher = cv.Stitcher_create()
+
+    error, stitched_img = stitcher.stitch(images)
+
+    if not error:
+        if not raw:
+            # add black padding to the image
+            stitched_img = cv.copyMakeBorder(
+                stitched_img, 10, 10, 10, 10,
+                cv.BORDER_CONSTANT, (0, 0, 0)
+            )
+            gray = cv.cvtColor(stitched_img, cv.COLOR_BGR2GRAY)
+            # isolate contours as black pixels
+            thresh_img = cv.threshold(gray, 0, 255, cv.THRESH_BINARY)[1]
+
+            contours = cv.findContours(
+                thresh_img.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+            contours = imutils.grab_contours(contours)
+            # from found contours locate area of interest
+            areaOI = max(contours, key=cv.contourArea)
+
+            mask = np.zeros(thresh_img.shape, dtype="uint8")
+            # create area to be cut from the original image
+            x, y, w, h = cv.boundingRect(areaOI)
+            cv.rectangle(mask, (x, y), (x + w, y + h), 255, -1)
+
+            minRectangle = mask.copy()
+            sub = mask.copy()
+            # find the minimum area with the image
+            while cv.countNonZero(sub) > 0:
+                minRectangle = cv.erode(minRectangle, None)
+                sub = cv.subtract(minRectangle, thresh_img)
+
+            contours = cv.findContours(
+                minRectangle.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+            contours = imutils.grab_contours(contours)
+            areaOI = max(contours, key=cv.contourArea)
+
+            x, y, w, h = cv.boundingRect(areaOI)
+            # from the original stitched image "cut" only the rectangle
+            stitched_img = stitched_img[y:y + h, x:x + w]
+
+        render_pil_image(stitched_img, "Stitch result")
+
+    else:
+        new_window = tk.Toplevel(root)
+        new_window.title("Error")
+        new_window.resizable(False, False)
+        tk.Label(new_window, text="Sorry, something went wrong.", font=("Arial", 12)).grid(
+            column=0, row=0, padx=10, pady=10)
+        btn1 = create_button(
+            new_window,
+            "OK",
+            lambda: new_window.destroy()
+        )
+        btn1.grid(column=1, row=2, padx=5, pady=5)
+
+
+def show_stitch_menu():
+    '''
+    Shows segmenation menu with given options.
+    '''
+
+    new_window = tk.Toplevel(root)
+    new_window.title(f"stich")
+    new_window.resizable(False, False)
+    tk.Label(new_window, text=f"Images in memory: {len(opened_images_list)}", font=("Arial", 12)).grid(
+        column=1, row=1, padx=10, pady=10)
+
+    btn1 = create_button(
+        new_window,
+        "raw stitch",
+        lambda: stitch(
+            new_window,
+            True
+        )
+    )
+    btn2 = create_button(
+        new_window,
+        "cut stitch",
+        lambda: stitch(
+            new_window,
+            False
+        )
+    )
+    btn1.grid(column=1, row=2, padx=5, pady=5)
+    btn2.grid(column=2, row=2, padx=5, pady=5)
+
+
 # Generates and renders the main menu.
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
@@ -1894,6 +2041,8 @@ skeletonize_button = create_button(
     root, "SKELETONIZE", show_skeletonize_menu)
 threshold_button = create_button(
     root, "SEGMENTATION", show_segmentation_menu)
+stitch_button = create_button(
+    root, "STITCH", show_stitch_menu)
 file_button.grid(column=1, row=1, padx=5, pady=5)
 analysis_button.grid(column=2, row=1, padx=5, pady=5)
 process_button.grid(column=3, row=1, padx=5, pady=5)
@@ -1903,6 +2052,7 @@ morph_button.grid(column=6, row=1, padx=5, pady=5)
 mask_filter_button.grid(column=7, row=1, padx=5, pady=5)
 skeletonize_button.grid(column=8, row=1, padx=5, pady=5)
 threshold_button.grid(column=9, row=1, padx=5, pady=5)
+stitch_button.grid(column=10, row=1, padx=5, pady=5)
 
 # Initialize program.
 root.mainloop()

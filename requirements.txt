@@ -7,6 +7,7 @@ docutils==0.18.1
 fonttools==4.31.1
 future==0.18.2
 idna==3.3
+imutils==0.5.4
 kiwisolver==1.4.0
 matplotlib==3.5.1
 numpy==1.22.3
