@@ -16,7 +16,7 @@ from create_button import create_button
 
 def terminate_all():
     """
-    When you close the root element, destroy all the matplotlib figures as well and close the program.
+    Destroy all the matplotlib figures as well and close the program.
     """
     plt.close('all')
     root.destroy()
@@ -40,7 +40,9 @@ plot_profile_data: Dict[str, List[int]] = {
 
 
 def add_event_listeners(window, image):
-
+    '''
+    Add focus event listeners to image object.
+    '''
     def on_focus(event):
         global focused_file, previous_file, plot_profile_data
         previous_file = focused_file
@@ -196,11 +198,7 @@ def generate_histogram_table(data: Dict[str, int]) -> None:
     """
     sorted_data = sort_histogram_data(data)
     new_window = tk.Toplevel(root)
-    # new_window.iconphoto(False, icon)
     new_window.resizable(False, False)
-    # sheet = tksheet.Sheet(new_window)
-    # sheet.grid()
-    # sheet.set_sheet_data([f"{cj}" for cj in sorted_data.values()])
     t = tk.Text(new_window, height=256, width=20)
     for i in sorted_data.keys():
         t.insert(tk.END, f"{i}: {sorted_data[i]}\n")
@@ -220,7 +218,7 @@ def compose_histogram(mode: str):
         return
     pixel_list = list(new_image.getdata())
     match new_image.mode:
-        # L for greyscale images, RGB for color images (duh)
+        # L for greyscale images, RGB for color images
         case 'L':
             color_values = {}
             i = 0
@@ -278,7 +276,9 @@ def compose_histogram(mode: str):
 
 
 def plot_profile() -> None:
-
+    """
+    Using coordinates of plot_profile_data make a line profile connecting two coordinates and display the graph with image.
+    """
     global plot_profile_data, focused_file
     x0, y0 = plot_profile_data["start"][0], plot_profile_data["start"][1]
     x1, y1 = plot_profile_data["end"][0], plot_profile_data["end"][1]
@@ -300,6 +300,9 @@ def plot_profile() -> None:
 
 
 def negate_image(window_to_close: tk.Toplevel) -> None:
+    '''
+    Invert color values on given image. Works on RGB(a) and greyscale objects.
+    '''
     window_to_close.destroy()
     if focused_file["image"]:
         new_image = focused_file["image"]
@@ -350,6 +353,10 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
 
 
 def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) -> None:
+    '''
+    Perform a threshold operation on an image object.
+    value variable depending on the isSimple boolean flag is interpeted as number of bins or an actual threshold.
+    '''
     window_to_close.destroy()
     if not value:
         value = 2
@@ -407,6 +414,10 @@ def threshold_image(window_to_close: tk.Toplevel, value: str, isSimple: bool) ->
 
 
 def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
+    '''
+    Perform posterization on an image.
+    Works only on RGB(a) images.
+    '''
     window_to_close.destroy()
     try:
         value = int(value)
@@ -420,8 +431,6 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
         new_image = Image.open(focused_file["path"])
     elif focused_file == "":
         return
-
-    processed_image = ''
 
     goal_table: List[int] = []
     for i in range(value):
@@ -447,7 +456,6 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
         negated_image = ImageTk.PhotoImage(negated_image)
     new_window = tk.Toplevel(
         root, width=new_image.width, height=new_image.height)
-    # new_window.iconphoto(False, icon)
     new_window.title(f"RasterLab: {focused_file['path']}")
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=negated_image)
@@ -456,10 +464,11 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
 
     image.pack()
 
-    return
-
 
 def generate_lut(pixel_list: List[int]):
+    '''
+    Generates LUT table in form of a dictionary.
+    '''
     lut = {}
     for pixel in pixel_list:
         if pixel in lut:
@@ -473,6 +482,10 @@ def generate_lut(pixel_list: List[int]):
 
 
 def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
+    '''
+    Performs a histogram value stretch.
+    Could be given 4 parameters, if not program will default to maximum stretch.
+    '''
     window_to_close.destroy()
     if focused_file["image"]:
         new_image = focused_file["image"]
@@ -540,23 +553,23 @@ def stretch_histogram(window_to_close: tk.Toplevel, p1, p2, q3, q4) -> None:
 
 
 def save_image(window_to_close: tk.Toplevel, new_file_name: str) -> None:
+    '''
+    Save image to disk.
+    '''
     window_to_close.destroy()
     focused_file["image"].save(new_file_name)
 
 
 # define main menu
 root = tk.Tk()
-# root.geometry("220x50")
 root.title("RasterLab")
-# icon = tk.PhotoImage(file='icon.png')
-# root.iconphoto(False, icon)
 root.resizable(False, False)
 root.protocol("WM_DELETE_WINDOW", terminate_all)
 
 save_button = ''
 
 
-def show_file_menu():
+def show_file_menu() -> None:
     """
     Render FILE menu with buttons to import and save an image.
     """
@@ -573,7 +586,10 @@ def show_file_menu():
     save_button.grid(column=2, row=1, padx=5, pady=5)
 
 
-def save_image_menu(window_to_destroy: tk.Toplevel):
+def save_image_menu(window_to_destroy: tk.Toplevel) -> None:
+    '''
+    Renders save image menu.
+    '''
     window_to_destroy.destroy()
 
     new_window = tk.Toplevel(root)
@@ -589,18 +605,18 @@ def save_image_menu(window_to_destroy: tk.Toplevel):
         new_window, "save", lambda: save_image(new_window, e1.get())).grid(column=2, row=2, padx=5, pady=5)
 
 
-def find_and_show_contours(fname):
+def find_and_show_contours(fname) -> None:
+    '''
+    Algorithm that finds and displays marked contours on a given image object.
+    '''
     img = cv.imread(fname, cv.IMREAD_GRAYSCALE)
     ret, thresh = cv.threshold(img, 127, 255, 0)
     contours, hierarchy = cv.findContours(
         thresh, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
-    # mode: cv2.RETR_EXTERNAL / cv2.RETR_FLOODFILL
-    # approximation: cv2.CHAIN_APPROX_NONE / cv2.CHAIN_APPROX_SIMPLE
     img3 = cv.cvtColor(thresh, cv.COLOR_GRAY2RGB)
     for cnt in contours:
         cv.drawContours(img3, [cnt], 0, (random.randrange(
             50, 200, 25), random.randrange(50, 200, 25), random.randrange(50, 200, 25)), 3)
-    # cv2_imshow(img3)
     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     im_pil = Image.fromarray(img3)
 
@@ -608,15 +624,17 @@ def find_and_show_contours(fname):
 
     new_window = tk.Toplevel(
         root, width=im_pil.width, height=im_pil.height)
-    # new_window.iconphoto(False, icon)
     new_window.resizable(False, False)
     image = tk.Label(new_window, image=new_img)
-    # it has to be a reference, otherwise the image doesn't load!
+    # it has to be a reference, otherwise the image doesn't load
     image.image = new_img  # type: ignore
     image.pack()
 
 
 def find_objects(window_to_destroy: tk.Toplevel):
+    '''
+    Performs series of operations to locate and analyse a list of found objects.
+    '''
     window_to_destroy.destroy()
     if not focused_file['path']:
         return
@@ -624,17 +642,12 @@ def find_objects(window_to_destroy: tk.Toplevel):
     find_and_show_contours(focused_file['path'])
     title: str = ""
     ret, thresh = cv.threshold(img, 127, 255, 0)
-    # funkcja znajdywania kontórow w obrazie binarnym
     contours, hierarchy = cv.findContours(
         thresh, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     sorted_data = cv.moments(img)
     new_window = tk.Toplevel(root)
-    # new_window.iconphoto(False, icon)
     new_window.resizable(False, False)
-    # sheet = tksheet.Sheet(new_window)
-    # sheet.grid()
-    # sheet.set_sheet_data([f"{cj}" for cj in sorted_data.values()])
     t = tk.Text(new_window, height=30, width=40)
     cnt = contours[0]
     t.insert(tk.END, f"Found {len(contours)} elements.\n")
@@ -696,6 +709,9 @@ def show_analyze_menu():
 
 
 def show_process_menu():
+    '''
+    Shows process menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"PROCESS")
     new_window.resizable(False, False)
@@ -715,6 +731,9 @@ def show_process_menu():
 
 
 def show_threshold_menu(window_to_destroy):
+    '''
+    Shows threshold menu with given options.
+    '''
     window_to_destroy.destroy()
     new_window = tk.Toplevel(root)
     new_window.title(f"THRESHOLD")
@@ -733,6 +752,9 @@ def show_threshold_menu(window_to_destroy):
 
 
 def show_stretch_menu(window_to_destroy):
+    '''
+    Shows stretch menu with given options.
+    '''
     window_to_destroy.destroy()
     new_window = tk.Toplevel(root)
     new_window.title(f"STRETCH")
@@ -765,6 +787,9 @@ def show_stretch_menu(window_to_destroy):
 
 
 def show_posterize_menu(window_to_destroy):
+    '''
+    Shows posterize menu with given options.
+    '''
     window_to_destroy.destroy()
     new_window = tk.Toplevel(root)
     new_window.title(f"POSTERIZE")
@@ -781,6 +806,9 @@ def show_posterize_menu(window_to_destroy):
 
 
 def filter_image(filter_option: int, edge_option: int, a=0, b=0, c=0) -> None:
+    '''
+    Performs filter operations on selected image object depending on parameters given.
+    '''
     if not focused_file['path']:
         return
     img = cv.imread(focused_file['path'])
@@ -919,6 +947,9 @@ def filter_image(filter_option: int, edge_option: int, a=0, b=0, c=0) -> None:
 
 
 def show_filter_menu():
+    '''
+    Shows filter menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"FILTER")
     new_window.resizable(False, False)
@@ -1160,6 +1191,9 @@ def show_filter_menu():
 
 
 def two_point_operation(window_to_close, option: int, blend_a: float = 1, blend_b: float = 1):
+    '''
+    Performs a selected series of two point operations on compatible images depending on given parameters.
+    '''
     window_to_close.destroy()
     if not focused_file['path'] and not previous_file['path']:
         return
@@ -1198,6 +1232,9 @@ def two_point_operation(window_to_close, option: int, blend_a: float = 1, blend_
 
 
 def show_two_point_menu():
+    '''
+    Shows two point menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"Two Point")
     new_window.resizable(False, False)
@@ -1254,6 +1291,9 @@ def show_two_point_menu():
 
 
 def morph_image(window_to_close, o1, o2, o3, o4):
+    '''
+    Performs morph operations.
+    '''
     window_to_close.destroy()
     o1, o2, o3, o4 = int(o1), int(o2), int(o3), int(o4)
     if not focused_file['path']:
@@ -1323,6 +1363,9 @@ def morph_image(window_to_close, o1, o2, o3, o4):
 
 
 def show_morph_menu():
+    '''
+    Shows morph menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"Morph")
     new_window.resizable(False, False)
@@ -1479,6 +1522,9 @@ def show_morph_menu():
 
 
 def mask_filter_image(window_to_close, o1, o2, o3):
+    '''
+    Performs filter operations with a mask on selected image object.
+    '''
     window_to_close.destroy()
     o1, o2, o3 = int(o1), int(o2), int(o3)
     if not focused_file['path']:
@@ -1537,6 +1583,9 @@ def mask_filter_image(window_to_close, o1, o2, o3):
 
 
 def show_mask_filter_menu():
+    '''
+    Shows mask filter menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"Morph")
     new_window.resizable(False, False)
@@ -1630,6 +1679,9 @@ def show_mask_filter_menu():
 
 
 def skeletonize_image(to_destroy, o1):
+    '''
+    Performs skeletonization operation on selected image object.
+    '''
     to_destroy.destroy()
     o1 = int(o1)
     if not focused_file['path']:
@@ -1667,6 +1719,9 @@ def skeletonize_image(to_destroy, o1):
 
 
 def show_skeletonize_menu():
+    '''
+    Shows skeletonize menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"Skeletonize")
     new_window.resizable(False, False)
@@ -1715,7 +1770,9 @@ def show_skeletonize_menu():
 
 
 def thershold_image(to_destroy, o1=0, o2=0):
-
+    '''
+    Performs threshold operations on selected image object.
+    '''
     to_destroy.destroy()
     try:
         o1, o2 = int(o1), int(o2)
@@ -1772,6 +1829,9 @@ def thershold_image(to_destroy, o1=0, o2=0):
 
 
 def show_segmentation_menu():
+    '''
+    Shows segmenation menu with given options.
+    '''
     new_window = tk.Toplevel(root)
     new_window.title(f"segmentation")
     new_window.resizable(False, False)
@@ -1822,6 +1882,7 @@ def show_segmentation_menu():
     btn4.grid(column=1, row=4, padx=5, pady=5)
 
 
+# Generates and renders the main menu.
 file_button = create_button(root, "FILE", show_file_menu)
 analysis_button = create_button(root, "ANALYZE", show_analyze_menu)
 process_button = create_button(root, "PROCESS", show_process_menu)
@@ -1843,5 +1904,5 @@ mask_filter_button.grid(column=7, row=1, padx=5, pady=5)
 skeletonize_button.grid(column=8, row=1, padx=5, pady=5)
 threshold_button.grid(column=9, row=1, padx=5, pady=5)
 
-
+# Initialize program.
 root.mainloop()
