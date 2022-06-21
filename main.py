@@ -12,8 +12,6 @@ import cv2 as cv
 import random
 import imutils
 
-from create_button import create_button
-
 
 def terminate_all():
     """
@@ -44,9 +42,22 @@ class RasterImage:
         return self.object.mode()
 
 
-opened_images_list: List[RasterImage] = []
+def create_button(root: tk.Toplevel | tk.Tk, text: str, command) -> tk.Button:
+    """
+    Given the root element, text and command, the function returns a ready tkinter Button element.
+    """
+    return tk.Button(root,
+                     text=text,
+                     pady=5,
+                     padx=10, command=command,
+                     font=("consolas", 12)
+                     )
 
+
+opened_images_list: List[RasterImage] = []
+# disables the toolbar for rendered images
 mpl.rcParams['toolbar'] = 'None'
+# stores two last actively used images
 focused_file: Dict[str, Any] = {
     "path": "",
     "mode": "",
@@ -57,6 +68,7 @@ previous_file: Dict[str, Any] = {
     "mode": "",
     "image": ""
 }
+# globally store coordinates for plotting function
 plot_profile_data: Dict[str, List[int]] = {
     "start": [-1, -1],
     "end": [-1, -1]
@@ -93,7 +105,6 @@ def import_image(root_window: tk.Toplevel):
     opened_images_list.insert(0, raster_image)
     new_window = tk.Toplevel(
         root, width=opened_image.width, height=opened_image.height)
-    # new_window.iconphoto(False, icon)
     new_window.title(f"RasterLab: {file_path}")
     new_window.resizable(False, False)
 
@@ -343,6 +354,7 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
         pixel_list: List[int] = list(new_image.getdata())
         negated_pixel_list: List[int] = []
 
+        # Convert pixel values to their opposites.
         for pixel in pixel_list:
             negated_pixel_list.append(abs(pixel - 255))
 
@@ -354,6 +366,7 @@ def negate_image(window_to_close: tk.Toplevel) -> None:
         negated_pixel_rgb_list: List[Tuple[int, int, int]] = []
 
         for pixel in pixel_rgb_list:
+            # Convert pixel values to their opposites.
             new_pixel = (abs(pixel[0] - 255),
                          abs(pixel[1] - 255), abs(pixel[2] - 255))
             negated_pixel_rgb_list.append(new_pixel)
@@ -458,12 +471,13 @@ def posterize_image(window_to_close: tk.Toplevel, value: str) -> None:
         return
 
     goal_table: List[int] = []
+    # Define bin values.
     for i in range(value):
         for j in range(int(256/value)):
             goal_table.append(int(256/value * (i)))
 
     if new_image.mode == 'RGB' or new_image.mode == 'RGBA':
-
+        # TODO: Reused parts of negate image algoritm, didn't change variable names.
         pixel_rgb_list: List[List[int]] = list(new_image.getdata())
         negated_pixel_rgb_list: List[Tuple[int, int, int]] = []
 
@@ -667,11 +681,13 @@ def find_objects(window_to_destroy: tk.Toplevel):
     find_and_show_contours(focused_file['path'])
     title: str = ""
     ret, thresh = cv.threshold(img, 127, 255, 0)
+    # Save contour data.
     contours, hierarchy = cv.findContours(
         thresh, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     sorted_data = cv.moments(img)
     new_window = tk.Toplevel(root)
+    # Render text file with data about found objects.
     new_window.resizable(False, False)
     t = tk.Text(new_window, height=30, width=40)
     cnt = contours[0]
@@ -708,6 +724,7 @@ def show_analyze_menu():
     new_window = tk.Toplevel(root)
     new_window.title(f"FILE")
     new_window.resizable(False, False)
+    # TODO: refactor button rendering if necessary
     global histogram_button
     histogram_button = create_button(
         new_window, "hist plot", lambda: compose_histogram('plot'))
@@ -733,7 +750,7 @@ def show_analyze_menu():
     plot_profile_button["state"] = "disabled"
 
 
-def show_process_menu():
+def show_process_menu() -> None:
     '''
     Shows process menu with given options.
     '''
@@ -755,7 +772,7 @@ def show_process_menu():
     stretch_button.grid(column=1, row=4, padx=5, pady=5)
 
 
-def show_threshold_menu(window_to_destroy):
+def show_threshold_menu(window_to_destroy) -> None:
     '''
     Shows threshold menu with given options.
     '''
@@ -776,7 +793,7 @@ def show_threshold_menu(window_to_destroy):
         new_window, "simple", lambda: threshold_image(new_window, e1.get(), True)).grid(column=1, row=2, padx=5, pady=5)
 
 
-def show_stretch_menu(window_to_destroy):
+def show_stretch_menu(window_to_destroy) -> None:
     '''
     Shows stretch menu with given options.
     '''
@@ -811,7 +828,7 @@ def show_stretch_menu(window_to_destroy):
         new_window, "stretch", lambda: stretch_histogram(new_window, p1.get(), p2.get(), q3.get(), q4.get())).grid(column=2, row=5, padx=5, pady=5)
 
 
-def show_posterize_menu(window_to_destroy):
+def show_posterize_menu(window_to_destroy) -> None:
     '''
     Shows posterize menu with given options.
     '''
@@ -1012,6 +1029,10 @@ def show_filter_menu():
     button5.grid(column=1, row=5, padx=5, pady=5)
 
     def show_edge_mode_submenu(window, option: int, a=0, b=0, c=0):
+        '''
+        Show edge mode submenu
+        '''
+        # Convert params into integers.
         if option != 9:
             a = int(a)
             b = int(b)
@@ -1042,6 +1063,9 @@ def show_filter_menu():
         button3.grid(column=1, row=4, padx=5, pady=5)
 
     def show_blur_submenu(to_destroy):
+        '''
+        Renders blur submenu
+        '''
         to_destroy.destroy()
         new_window = tk.Toplevel(root)
         new_window.title(f"Blur")
@@ -1062,6 +1086,9 @@ def show_filter_menu():
         button2.grid(column=1, row=2, padx=5, pady=5)
 
     def show_edge_submenu(to_destroy):
+        '''
+        Renders show_edge submenu
+        '''
         to_destroy.destroy()
         new_window = tk.Toplevel(root)
         new_window.title(f"Edge detection")
@@ -1107,6 +1134,9 @@ def show_filter_menu():
         button4.grid(column=1, row=5, padx=5, pady=5)
 
     def show_sharpen_submenu(to_destroy):
+        '''
+        Display sharpen submenu
+        '''
         to_destroy.destroy()
         new_window = tk.Toplevel(root)
         new_window.title(f"Sharpen")
@@ -1169,8 +1199,10 @@ def show_filter_menu():
             column=3, row=3, padx=10, pady=10)
 
         def submit_kernel():
+            # String values from inputs has to be converted to integers.
             kernel_sum = int(a.get()) + int(b.get()) + int(c.get()) + int(d.get()) + int(
                 e.get()) + int(f.get()) + int(g.get()) + int(h.get()) + int(i.get())
+            # Create ready kernel to send.
             kernel = np.array(
                 [
                     [int(a.get()), int(b.get()), int(c.get())],
@@ -1189,6 +1221,9 @@ def show_filter_menu():
         button1.grid(column=4, row=1, padx=5, pady=5)
 
     def show_median_submenu(to_destroy):
+        '''
+        Renders median submenu.
+        '''
         to_destroy.destroy()
         new_window = tk.Toplevel(root)
         new_window.title(f"Median")
@@ -1718,8 +1753,6 @@ def skeletonize_image(to_destroy, o1):
     def skeletonize(img):
         """ OpenCV function to return a skeletonized version of img, a Mat object"""
 
-        #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
-
         img = img.copy()  # don't clobber original
         skel = img.copy()
 
@@ -1799,6 +1832,7 @@ def thershold_image(to_destroy, o1=0, o2=0):
     Performs threshold operations on selected image object.
     '''
     to_destroy.destroy()
+    # try converting string values into integers
     try:
         o1, o2 = int(o1), int(o2)
     except:
@@ -1818,32 +1852,36 @@ def thershold_image(to_destroy, o1=0, o2=0):
         case 3:
             title = "otsu thersholding"
             blur = cv.GaussianBlur(img, (5, 5), 0)
+
             ret3, result = cv.threshold(
                 blur, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         case 4:
+
             img = cv.imread(focused_file['path'], cv.IMREAD_COLOR)
             title = "watershedding"
+            # Convert to greyscale.
             img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
             ret2, thresh = cv.threshold(
                 img_gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
             kernel = np.ones((3, 3), np.uint8)
+            # Reduce the noise pollution.
             opening = cv.morphologyEx(
                 thresh, cv.MORPH_OPEN, kernel, iterations=1)
             sure_bg = cv.dilate(opening, kernel, iterations=1)
             dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
-
+            # Find clean objects by distance transforming.
             ret, sure_fg = cv.threshold(
                 dist_transform, 0.5*dist_transform.max(), 255, 0)
             sure_fg = np.uint8(sure_fg)
-
+            # Find uncertain objects.
             unknown = cv.subtract(sure_bg, sure_fg)
+            # Mark found objects.
             ret, markers = cv.connectedComponents(sure_fg)
-
             markers = markers+1
             markers[unknown == 255] = 0
 
             markers2 = cv.watershed(img, markers)
-
+            # Display image with color markers.
             img_gray[markers2 == -1] = 255
             img[markers2 == -1] = [255, 0, 0]
             result = cv.applyColorMap(np.uint8(markers2*10), cv.COLORMAP_JET)
